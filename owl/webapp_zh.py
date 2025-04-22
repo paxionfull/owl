@@ -25,8 +25,20 @@ from dotenv import load_dotenv, set_key, find_dotenv, unset_key
 import threading
 import queue
 import re  # For regular expression operations
+import wave  # 用于处理.wav文件
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
+
+from funasr_onnx import Paraformer
+from funasr_onnx import CT_Transformer
+
+from pathlib import Path                                                                                                                                  
+                                                                                                                         
+model_dir = "damo/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"                                                                     
+asr_model = Paraformer(model_dir, batch_size=1, quantize=True)
+
+punc_model_dir = "damo/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
+punc_model = CT_Transformer(punc_model_dir)
 
 
 # 配置日志系统
@@ -755,6 +767,61 @@ def get_env_var_value(key):
     return os.environ.get(key, "")
 
 
+# 音频处理相关函数
+def process_audio_input(audio_path):
+    """
+    处理音频输入，将其转换为文本
+    
+    Args:
+        audio_path: 音频文件的路径
+        
+    Returns:
+        str: 从音频中识别出的文本
+    """
+    if not audio_path:
+        return ""
+    
+    try:
+        # 确保音频文件存在
+        if not os.path.exists(audio_path):
+            logging.error(f"音频文件不存在: {audio_path}")
+            return ""
+        
+        # 保存为.wav文件
+        wav_dir = os.path.join(os.path.dirname(__file__), "audio_inputs")
+        os.makedirs(wav_dir, exist_ok=True)
+        
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        wav_filename = f"audio_input_{timestamp}.wav"
+        wav_path = os.path.join(wav_dir, wav_filename)
+        
+        # 如果输入已经是.wav文件，直接复制
+        if audio_path.endswith('.wav'):
+            import shutil
+            shutil.copy(audio_path, wav_path)
+        else:
+            # 否则转换为.wav格式
+            # 这里使用gradio内置的音频处理功能，不需要额外代码
+            pass
+        
+        logging.info(f"已保存音频文件: {wav_path}")
+        
+    
+        # 当前仅返回占位符文本，实际项目中需要替换成真实ASR结果
+        # transcribed_text = f"[这里将显示从音频中识别的文本。音频文件已保存: {wav_filename}]"
+
+        result = asr_model(wav_path)
+        transcribed_text = result[0]["preds"][0]
+        transcribed_text = punc_model(transcribed_text)[0]
+        return transcribed_text
+        
+    except Exception as e:
+        logging.error(f"处理音频输入时出错: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"[音频处理错误: {str(e)}]"
+
+
 def create_ui():
     """创建增强版Gradio界面"""
 
@@ -1062,27 +1129,44 @@ def create_ui():
 
         with gr.Row():
             with gr.Column(scale=0.5):
+                # 添加音频输入组件
+                with gr.Group():
+                    gr.Markdown("### 🎙️ 语音输入")
+                    with gr.Row():
+                        with gr.Column(scale=1):
+                            audio_input = gr.Audio(
+                                sources=["microphone", "upload"],
+                                type="filepath",
+                                label="录制或上传音频",
+                                elem_id="audio_input"
+                            )
+                        with gr.Column(scale=1):
+                            transcribe_button = gr.Button("🔊 转换为文本", variant="secondary")
+                
                 question_input = gr.Textbox(
                     lines=5,
                     placeholder="请输入您的问题...",
                     label="问题",
                     elem_id="question_input",
                     show_copy_button=True,
-                    value="打开百度搜索，总结一下camel-ai的camel框架的github star、fork数目等，并把数字用plot包写成python文件保存到本地，并运行生成的python文件。",
+                    # value="打开百度搜索，总结一下camel-ai的camel框架的github star、fork数目等，并把数字用plot包写成python文件保存到本地，并运行生成的python文件。",
+                    value="帮我找一下旅行的风景照，做一个图文并茂的相册，我要发小红书",
                 )
 
                 # 增强版模块选择下拉菜单
                 # 只包含MODULE_DESCRIPTIONS中定义的模块
                 module_dropdown = gr.Dropdown(
                     choices=list(MODULE_DESCRIPTIONS.keys()),
-                    value="run_qwen_zh",
+                    # value="run_qwen_zh",
+                    value="run",
                     label="选择功能模块",
                     interactive=True,
                 )
 
                 # 模块描述文本框
                 module_description = gr.Textbox(
-                    value=MODULE_DESCRIPTIONS["run_qwen_zh"],
+                    # value=MODULE_DESCRIPTIONS["run_qwen_zh"],
+                    value=MODULE_DESCRIPTIONS["run"],
                     label="模块描述",
                     interactive=False,
                     elem_classes="module-info",
@@ -1248,7 +1332,19 @@ def create_ui():
             outputs=[log_display2],
         )
 
-        # 不再默认自动刷新日志
+        # 设置音频处理事件
+        transcribe_button.click(
+            fn=process_audio_input,
+            inputs=[audio_input],
+            outputs=[question_input]
+        )
+        
+        # 添加直接处理事件 - 当音频上传或录制完成后自动处理
+        audio_input.change(
+            fn=process_audio_input,
+            inputs=[audio_input],
+            outputs=[question_input]
+        )
 
     return app
 
