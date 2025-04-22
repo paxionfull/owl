@@ -479,13 +479,14 @@ def run_society(
         }
 
         chat_history.append(_data)
+        logger.info("================================================")
         logger.info(
             f"Round #{_round} user_response:\n {user_response.msgs[0].content if user_response.msgs and len(user_response.msgs) > 0 else ''}"
         )
         logger.info(
             f"Round #{_round} assistant_response:\n {assistant_response.msgs[0].content if assistant_response.msgs and len(assistant_response.msgs) > 0 else ''}"
         )
-
+        logger.info("================================================")
         if (
             assistant_response.terminated
             or user_response.terminated
