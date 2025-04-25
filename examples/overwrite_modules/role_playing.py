@@ -221,7 +221,7 @@ task_prompt是用户下达的任务, 根据已知的用户画像信息user_profi
 - 如果task_prompt中包含对图片的分析, 请在优化后的prompt中明确告诉assistant理解图片内容.
 - 如果task_prompt明确表达出要将文案发布到某个平台, 请在优化后的prompt中告诉assistant获取该平台上用户的近期发布内容, 并参考其写作风格.
 - 如果task_prompt中出现了对文案风格的要求.优化后的prompt要明确保留相应的风格要求.
-- 最后的文案默认写入文件outputs/trip.html. 文件引用路径使用系统绝对路径.
+- 最后的文案默认写入文件outputs/trip.html. 并在优化后的prompt中明确告诉assistant: 在html中使用横向排列的图文卡片设计, 每个卡片包含完整的内容单元; 文件引用路径使用系统绝对路径; 最后在回复中给出outputs/trip.html的绝对路径.
 - 优化后的prompt若保留优化前后意思相同的句子, 请删除优化前的同义句.
 """
 

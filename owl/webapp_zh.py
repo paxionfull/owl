@@ -910,17 +910,17 @@ def create_ui():
             )
 
     with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue")) as app:
-        gr.Markdown(
-            """
-                # 🦉 OWL 多智能体协作系统
+        # gr.Markdown(
+        #     """
+        #         # 🦉 OWL 多智能体协作系统
 
-                基于CAMEL框架开发的先进多智能体协作系统，旨在通过智能体协作解决复杂问题。
+        #         基于CAMEL框架开发的先进多智能体协作系统，旨在通过智能体协作解决复杂问题。
 
-                可以通过修改本地脚本自定义模型和工具。
+        #         可以通过修改本地脚本自定义模型和工具。
                 
-                本网页应用目前处于测试阶段，仅供演示和测试使用，尚未推荐用于生产环境。
-                """
-        )
+        #         本网页应用目前处于测试阶段，仅供演示和测试使用，尚未推荐用于生产环境。
+        #         """
+        # )
 
         # 添加自定义CSS
         gr.HTML("""
@@ -987,6 +987,8 @@ def create_ui():
             }
 
             .log-display {
+                height: 400px;          /* 固定高度 */
+                overflow-y: auto;       /* 垂直滚动条 */
                 border-radius: 10px;
                 padding: 15px;
                 margin-bottom: 20px;
@@ -1150,7 +1152,8 @@ def create_ui():
                     elem_id="question_input",
                     show_copy_button=True,
                     # value="打开百度搜索，总结一下camel-ai的camel框架的github star、fork数目等，并把数字用plot包写成python文件保存到本地，并运行生成的python文件。",
-                    value="帮我找一下旅行的风景照，做一个图文并茂的相册，我要发小红书",
+                    # value="帮我找一下旅行的风景照，做一个图文并茂的相册，我要发小红书",
+                    value="",
                 )
 
                 # 增强版模块选择下拉菜单
@@ -1185,23 +1188,23 @@ def create_ui():
                     label="令牌计数", interactive=False, elem_classes="token-count"
                 )
 
-                # 示例问题
-                examples = [
-                    "打开百度搜索，总结一下camel-ai的camel框架的github star、fork数目等，并把数字用plot包写成python文件保存到本地，并运行生成的python文件。",
-                    "浏览亚马逊并找出一款对程序员有吸引力的产品。请提供产品名称和价格",
-                    "写一个hello world的python文件，保存到本地",
-                ]
+                # # 示例问题
+                # examples = [
+                #     "打开百度搜索，总结一下camel-ai的camel框架的github star、fork数目等，并把数字用plot包写成python文件保存到本地，并运行生成的python文件。",
+                #     "浏览亚马逊并找出一款对程序员有吸引力的产品。请提供产品名称和价格",
+                #     "写一个hello world的python文件，保存到本地",
+                # ]
 
-                gr.Examples(examples=examples, inputs=question_input)
+                # gr.Examples(examples=examples, inputs=question_input)
 
-                gr.HTML("""
-                        <div class="footer" id="about">
-                            <h3>关于 OWL 多智能体协作系统</h3>
-                            <p>OWL 是一个基于CAMEL框架开发的先进多智能体协作系统，旨在通过智能体协作解决复杂问题。</p>
-                            <p>© 2025 CAMEL-AI.org. 基于Apache License 2.0开源协议</p>
-                            <p><a href="https://github.com/camel-ai/owl" target="_blank">GitHub</a></p>
-                        </div>
-                    """)
+                # gr.HTML("""
+                #         <div class="footer" id="about">
+                #             <h3>关于 OWL 多智能体协作系统</h3>
+                #             <p>OWL 是一个基于CAMEL框架开发的先进多智能体协作系统，旨在通过智能体协作解决复杂问题。</p>
+                #             <p>© 2025 CAMEL-AI.org. 基于Apache License 2.0开源协议</p>
+                #             <p><a href="https://github.com/camel-ai/owl" target="_blank">GitHub</a></p>
+                #         </div>
+                #     """)
 
             with gr.Tabs():  # 设置对话记录为默认选中的标签页
                 with gr.TabItem("对话记录"):
@@ -1211,6 +1214,11 @@ def create_ui():
                             value="暂无对话记录。",
                             elem_classes="log-display",
                         )
+                        # log_display2 = gr.Textbox(
+                        #     value="暂无对话记录。",
+                        #     elem_classes="log-display",
+                        #     autoscroll=True,
+                        # )
 
                     with gr.Row():
                         refresh_logs_button2 = gr.Button("刷新记录")
