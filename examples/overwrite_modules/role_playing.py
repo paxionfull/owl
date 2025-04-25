@@ -206,7 +206,7 @@ class RolePlaying:
 </guideline>
 
 ## 任务描述:
-task_prompt是用户下达的任务, 根据已知的用户画像信息user_profile, 以及该任务的prompt优化指南guideline, 对task_prompt进行优化。
+task_prompt是用户下达的任务, 根据已知的用户画像信息user_profile, 以及该任务的prompt优化指南guideline, 对task_prompt进行优化.
 
 ## 要求:
 1. 用户画像信息profile中若提供了与该任务相关的信息, 要利用这些信息
@@ -216,15 +216,17 @@ task_prompt是用户下达的任务, 根据已知的用户画像信息user_profi
 直接返回优化后的task_prompt, 不要添加任何解释说明
 """
         guideline = """优化prompt遵循如下规则:
-- 如果task_prompt中欠缺完成任务的必要信息, 例如文件路径。请查看user_profile中是否提供了相关信息, 并相应添加在优化后的task prompt中。
-- 如果task_prompt中包含对图片的分析, 请在优化后的prompt中明确告诉assistant理解图片内容。
-- 如果task_prompt明确表达出要将文案发布到某个平台, 请在优化后的prompt中告诉assistant获取该平台上用户的近期发布内容, 并参考其写作风格。
-- 如果task_prompt中出现了对文案风格的要求。优化后的prompt要明确保留相应的风格要求。
-- 最后的文案默认写入文件outputs/trip.html.
+- 如果task_prompt中欠缺完成任务的必要信息, 例如文件路径. 请查看user_profile中是否提供了相关信息, 并相应添加在优化后的task prompt中.
+- 如果task_prompt中包含查看文件系统目录的文件路径, 请在优化后的prompt中明确告诉assistant写代码并调用代码执行工具查看目录下的文件.
+- 如果task_prompt中包含对图片的分析, 请在优化后的prompt中明确告诉assistant理解图片内容.
+- 如果task_prompt明确表达出要将文案发布到某个平台, 请在优化后的prompt中告诉assistant获取该平台上用户的近期发布内容, 并参考其写作风格.
+- 如果task_prompt中出现了对文案风格的要求.优化后的prompt要明确保留相应的风格要求.
+- 最后的文案默认写入文件outputs/trip.html. 文件引用路径使用系统绝对路径.
+- 优化后的prompt若保留优化前后意思相同的句子, 请删除优化前的同义句.
 """
 
-# - 如果需要查看文件系统目录的文件路径, 请在prompt告知assistant写代码查看目录下的文件。浏览文件通过工具完成。
-# - 如果有文件引用，在outputs目录下建立原目录的软连接，并使用相对路径，保证路径的正确性并且无中文。
+# - 如果需要查看文件系统目录的文件路径, 请在prompt告知assistant写代码查看目录下的文件.浏览文件通过工具完成.
+# - 如果有文件引用，在outputs目录下建立原目录的软连接，并使用相对路径，保证路径的正确性并且无中文.
 # - 最后的文案默认写入文件outputs/tmp.md或者outputs/tmp.txt.
 
         if self.with_prompt_augmentation:

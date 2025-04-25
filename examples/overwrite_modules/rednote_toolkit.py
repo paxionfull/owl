@@ -59,20 +59,43 @@ class RedNoteToolkit(BaseToolkit):
 
         return False
 
-    def _manual_login(self, page, timeout=20):
+    def _manual_login(self, page, timeout=120):
         """等待用户手动登录并保存Cookie"""
         print(f"请在 {timeout} 秒内完成手动登录")
         page.goto("https://www.xiaohongshu.com/")
 
-        try:
-            page.wait_for_selector('span.channel:text("我")', timeout=timeout * 1000)
-            print("检测到成功登录")
-            return True
-        except Exception as e:
-            print(f"登录等待超时或未检测到登录成功: {e}")
-            return False
+        # try:
+        #     page.wait_for_selector('span.channel:text("我")', timeout=timeout * 1000)
+        #     print("检测到成功登录")
+        #     return True
+        # except Exception as e:
+        #     print(f"登录等待超时或未检测到登录成功: {e}")
+        #     return False
+        # 每5秒检查一次登录状态
+        check_interval = 5
+        elapsed_time = 0
+        
+        while elapsed_time < timeout:
+            print(f"已等待 {elapsed_time} 秒，还剩 {timeout - elapsed_time} 秒...")
+            
+            # 检查是否有登录成功的标识
+            try:
+                # 设置较短的超时时间进行快速检查
+                if page.locator('span.channel:text("我")').count() > 0:
+                    print("检测到成功登录")
+                    return True
+            except Exception:
+                pass
+            
+            # 等待check_interval秒
+            time.sleep(check_interval)
+            elapsed_time += check_interval
+        
+        print(f"超过 {timeout} 秒未检测到登录成功")
+        return False
 
-    def extract_xiaohongshu_notes(self, profile_id: str, force_login: bool = False, max_notes: int = 5):
+    # def extract_xiaohongshu_notes(self, profile_id: str, force_login: bool = False, max_notes: int = 5):
+    def extract_xiaohongshu_notes(self, force_login: bool = False, max_notes: int = 5):
         """
         提取小红书用户的历史笔记内容
 
@@ -106,10 +129,26 @@ class RedNoteToolkit(BaseToolkit):
                 else:
                     print("手动登录失败，继续以未登录状态运行")
 
-            user_url = f"https://www.xiaohongshu.com/user/profile/{profile_id}"
-            page.goto(user_url)
-            print(f"正在访问用户主页: {user_url}")
-            time.sleep(5)
+            # user_url = f"https://www.xiaohongshu.com/user/profile/{profile_id}"
+            # page.goto(user_url)
+            # print(f"正在访问用户主页: {user_url}")
+            # time.sleep(5)
+            print("正在点击'我'按钮跳转到个人主页")
+            try:
+                # 点击导航栏中的"我"按钮
+                me_button = page.locator("span.channel:text('我')").first
+                me_button.click()
+                print("已点击'我'按钮")
+                time.sleep(5)
+                
+            except Exception as e:
+                print(f"点击'我'按钮或获取profile_id时出错: {e}")
+                return []
+                
+            # 移除旧的备选逻辑，因为我们现在必须要成功获取到profile_id才能继续
+            # user_url = f"https://www.xiaohongshu.com/user/profile/{profile_id}"
+            # page.goto(user_url)
+            # print(f"尝试直接访问用户主页: {user_url}")
 
             username_element = page.locator("h1").first
             username = username_element.text_content() if username_element.count() > 0 else "未知用户"
