@@ -27,11 +27,13 @@ from camel.toolkits import (
 )
 from camel.types import ModelPlatformType, ModelType, TaskType
 from camel.logger import set_log_level
-from camel.societies import RolePlaying
+# from camel.societies import RolePlaying
 
 from owl.utils import run_society, DocumentProcessingToolkit
 
-from .image_analysis import ImageAnalysisToolkit
+from examples.overwrite_modules.image_analysis import ImageAnalysisToolkit
+from examples.overwrite_modules.role_playing import RolePlaying
+from examples.overwrite_modules.rednote_toolkit import RedNoteToolkit
 
 base_dir = pathlib.Path(__file__).parent.parent
 env_path = base_dir / "owl" / ".env"
@@ -105,12 +107,13 @@ def construct_society(question: str) -> RolePlaying:
         # *AudioAnalysisToolkit().get_tools(),  # This requires OpenAI Key
         *CodeExecutionToolkit(sandbox="subprocess", verbose=True).get_tools(),
         *ImageAnalysisToolkit(model=models["image"]).get_tools(),
-        SearchToolkit().search_duckduckgo,
+        # SearchToolkit().search_duckduckgo,
         # SearchToolkit().search_google,  # Comment this out if you don't have google search
         # SearchToolkit().search_wiki,
         # *ExcelToolkit().get_tools(),
         *DocumentProcessingToolkit(model=models["document"]).get_tools(),
         *FileWriteToolkit(output_dir="./").get_tools(),
+        *RedNoteToolkit().get_tools(),
     ]
 
     user_profile = """用户的照片存放在以下路径:
@@ -175,9 +178,11 @@ def main():
     # Default research question
     # default_task = "Navigate to Amazon.com and identify one product that is attractive to coders. Please provide me with the product name and price. No need to verify your answer."
     # default_task = "搜索大疆action 5pro的价格"
-    default_task = (
-        "查看目录\"/Users/zhuyuyao/Documents/llm应用/联想demo/旅行\"下的照片，根据图片内容生成一个旅游游记markdown, 存储在当前目录的trip_log_mcp.md中。markdown内容包含图片(图片引用使用绝对路径)以及对应的内容描述，整体构成一个完整旅行叙事。"
-    )
+    # default_task = (
+    #     "查看目录\"/Users/zhuyuyao/Documents/llm应用/联想demo/旅行\"下的照片，根据图片内容生成一个旅游游记markdown, 存储在当前目录的trip_log_mcp.md中。markdown内容包含图片(图片引用使用绝对路径)以及对应的内容描述，整体构成一个完整旅行叙事。"
+    # )
+
+    default_task = "帮我找一下旅行的风景照，做一个图文并茂的相册，我要发小红书"
 
     # Override default task if command line argument is provided
     task = sys.argv[1] if len(sys.argv) > 1 else default_task
