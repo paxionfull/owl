@@ -13,6 +13,7 @@
 # ========= Copyright 2023-2024 @ CAMEL-AI.org. All Rights Reserved. =========
 import sys
 import pathlib
+import platform
 from dotenv import load_dotenv
 from camel.models import ModelFactory
 from camel.toolkits import (
@@ -116,7 +117,14 @@ def construct_society(question: str) -> RolePlaying:
         *RedNoteToolkit().get_tools(),
     ]
 
-    user_profile = """用户的照片存放在以下路径:
+    # 根据操作系统类型设置不同的路径
+    system = platform.system()
+    if system == "Windows":
+        user_profile = """用户的照片存放在以下路径:
+    "C:\\Users\\Device Intelligent\\Pictures\\American\"
+"""
+    else:  # macOS或其他Unix系统
+        user_profile = """用户的照片存放在以下路径:
     "/Users/zhuyuyao/Documents/llm应用/联想demo/美国旅行"
 """
 
