@@ -14,10 +14,8 @@ from camel.types import ModelPlatformType, ModelType
 from camel.utils import MCPServer
 from multiprocessing import Pool, cpu_count
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from geopy.geocoders import Nominatim
 
 import os
-import exifread
 from dotenv import load_dotenv
 
 load_dotenv()
