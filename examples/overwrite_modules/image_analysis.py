@@ -25,59 +25,6 @@ load_dotenv()
 logger = get_logger(__name__)
 
 
-def get_image_location(image_path):
-    if not os.path.exists(image_path):
-        print("错误: 文件未找到!")
-        return None
-    try:
-        with open(image_path, 'rb') as f:
-            tags = exifread.process_file(f)
-            # 检查 GPS 相关标签是否存在
-            if 'GPS GPSLatitude' in tags and 'GPS GPSLongitude' in tags:
-                latitude = tags['GPS GPSLatitude']
-                longitude = tags['GPS GPSLongitude']
-                lat_ref = tags.get('GPS GPSLatitudeRef', 'N')
-                lon_ref = tags.get('GPS GPSLongitudeRef', 'E')
-
-                # 将经纬度转换为十进制格式
-                def convert_to_decimal(value, ref):
-                    d = float(value.values[0].num) / float(value.values[0].den)
-                    m = float(value.values[1].num) / float(value.values[1].den)
-                    s = float(value.values[2].num) / float(value.values[2].den)
-                    decimal = d + (m / 60) + (s / 3600)
-                    if ref in ['S', 'W']:
-                        decimal = -decimal
-                    return decimal
-
-                lat_decimal = convert_to_decimal(latitude, lat_ref)
-                lon_decimal = convert_to_decimal(longitude, lon_ref)
-
-                return lat_decimal, lon_decimal
-            else:
-                print("错误: 图片中未找到 GPS 信息。")
-                return None
-    except Exception as e:
-        print(f"错误: 发生了一个未知错误: {e}")
-        return None
-
-
-def convert_coordinates_to_address(latitude, longitude):
-
-    geolocator = Nominatim(user_agent="my_geo_app")
-    location_str = f"{latitude},{longitude}"
-
-    try:
-        location = geolocator.reverse(location_str)
-        if location:
-            return location.address
-        else:
-            print("未找到对应的地址信息。")
-    except Exception as e:
-        print(f"发生错误: {e}")
-
-    return None
-
-
 @MCPServer()
 class ImageAnalysisToolkit(BaseToolkit):
     r"""A toolkit for comprehensive image analysis and understanding.
@@ -338,9 +285,6 @@ if __name__ == "__main__":
 
     print("#" * 10)
     filepath = "data/IMG_0030.JPG"
-    gps = get_image_location(filepath)
-    address = convert_coordinates_to_address(gps[0], gps[1])
-    print("address: {}".format(address))
     answers = image_analysis_toolkit.ask_question_about_images(
         [filepath, filepath], "图片里面有什么")
     print("#" * 10)

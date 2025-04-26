@@ -193,17 +193,17 @@ class RolePlaying:
         3. 语言
         """
         prompt_template = """## 已知信息:
-<task_prompt>
+[task_prompt]
 {task_prompt}
-</task_prompt>
+[/task_prompt]
 
-<user_profile>
+[user_profile]
 {user_profile}
-</user_profile>
+[/user_profile]
 
-<guideline>
+[guideline]
 {guideline}
-</guideline>
+[/guideline]
 
 ## 任务描述:
 task_prompt是用户下达的任务, 根据已知的用户画像信息user_profile, 以及该任务的prompt优化指南guideline, 对task_prompt进行优化.

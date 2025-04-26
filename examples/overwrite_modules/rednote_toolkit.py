@@ -74,10 +74,10 @@ class RedNoteToolkit(BaseToolkit):
         # 每5秒检查一次登录状态
         check_interval = 5
         elapsed_time = 0
-        
+
         while elapsed_time < timeout:
             print(f"已等待 {elapsed_time} 秒，还剩 {timeout - elapsed_time} 秒...")
-            
+
             # 检查是否有登录成功的标识
             try:
                 # 设置较短的超时时间进行快速检查
@@ -86,11 +86,11 @@ class RedNoteToolkit(BaseToolkit):
                     return True
             except Exception:
                 pass
-            
+
             # 等待check_interval秒
             time.sleep(check_interval)
             elapsed_time += check_interval
-        
+
         print(f"超过 {timeout} 秒未检测到登录成功")
         return False
 
@@ -140,25 +140,28 @@ class RedNoteToolkit(BaseToolkit):
                 me_button.click()
                 print("已点击'我'按钮")
                 time.sleep(5)
-                
+
             except Exception as e:
                 print(f"点击'我'按钮或获取profile_id时出错: {e}")
                 return []
-                
-            # 移除旧的备选逻辑，因为我们现在必须要成功获取到profile_id才能继续
-            # user_url = f"https://www.xiaohongshu.com/user/profile/{profile_id}"
-            # page.goto(user_url)
-            # print(f"尝试直接访问用户主页: {user_url}")
 
-            username_element = page.locator("h1").first
-            username = username_element.text_content() if username_element.count() > 0 else "未知用户"
-            print(f"用户名称: {username}")
+            # 从当前URL中获取用户ID
+            try:
+                # 定位"active link-wrapper"元素，这里包含了用户ID
+                profile_link = page.locator("a.active.router-link-exact-active.link-wrapper").first
+                profile_url = profile_link.get_attribute("href")
+                # 从URL中提取用户ID
+                profile_id = re.search(r"/user/profile/([^?]+)", profile_url).group(1)
+                print(f"获取到用户ID: {profile_id}")
+            except Exception as e:
+                print(f"获取用户ID时出错: {e}")
+                profile_id = "未知ID"
 
             try:
                 note_tab = page.locator("text=笔记").first
                 note_tab.click()
                 print("已点击笔记标签")
-                time.sleep(2)
+                time.sleep(3)
             except Exception as e:
                 print(f"点击笔记标签时出错: {e}")
 
@@ -247,7 +250,7 @@ if __name__ == "__main__":
     # 获取小红书用户笔记，设置最大获取3条笔记
     print("开始获取小红书用户笔记...")
     results = toolkit.extract_xiaohongshu_notes(
-        profile_id=profile_id,
+        # profile_id=profile_id,
         force_login=False,
         max_notes=3
     )
