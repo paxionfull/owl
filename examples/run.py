@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 from camel.models import ModelFactory
 from camel.toolkits import (
     AudioAnalysisToolkit,
-    CodeExecutionToolkit,
+    # CodeExecutionToolkit,
     ExcelToolkit,
     # ImageAnalysisToolkit,
     SearchToolkit,
@@ -35,6 +35,7 @@ from owl.utils import run_society, DocumentProcessingToolkit
 from examples.overwrite_modules.image_analysis import ImageAnalysisToolkit
 from examples.overwrite_modules.role_playing import RolePlaying
 from examples.overwrite_modules.rednote_toolkit import RedNoteToolkit
+from examples.overwrite_modules.code_execution import CodeExecutionToolkit
 
 base_dir = pathlib.Path(__file__).parent.parent
 env_path = base_dir / "owl" / ".env"
@@ -121,7 +122,7 @@ def construct_society(question: str) -> RolePlaying:
     system = platform.system()
     if system == "Windows":
         user_profile = """用户的照片存放在以下路径:
-    "C:\\Users\\Device Intelligent\\Pictures\\American\"
+    "C:\\Users\\Device Intelligent\\Pictures\\American"
 """
     else:  # macOS或其他Unix系统
         user_profile = """用户的照片存放在以下路径:
