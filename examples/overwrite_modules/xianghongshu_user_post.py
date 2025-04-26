@@ -93,16 +93,28 @@ def extract_xiaohongshu_notes(profile_id, cookie_file='xiaohongshu_cookies.json'
             else:
                 print("手动登录失败，继续以未登录状态运行")
 
-        # 访问用户主页
-        user_url = f"https://www.xiaohongshu.com/user/profile/{profile_id}"
-        page.goto(user_url)
-        print(f"正在访问用户主页: {user_url}")
-        time.sleep(5)  # 等待页面加载
+        # # 访问用户主页
+        # user_url = f"https://www.xiaohongshu.com/user/profile/{profile_id}"
+        # page.goto(user_url)
+        # print(f"正在访问用户主页: {user_url}")
+        # time.sleep(5)  # 等待页面加载
 
-        # 获取用户名称
-        username_element = page.locator("h1").first
-        username = username_element.text_content() if username_element.count() > 0 else "未知用户"
-        print(f"用户名称: {username}")
+        # 从当前URL中获取用户ID
+        try:
+            # 定位"active link-wrapper"元素，这里包含了用户ID
+            profile_link = page.locator("a.active.router-link-exact-active.link-wrapper").first
+            profile_url = profile_link.get_attribute("href")
+            # 从URL中提取用户ID
+            profile_id = re.search(r"/user/profile/([^?]+)", profile_url).group(1)
+            print(f"获取到用户ID: {profile_id}")
+        except Exception as e:
+            print(f"获取用户ID时出错: {e}")
+            profile_id = "未知ID"
+
+        # # 获取用户名称
+        # username_element = page.locator("h1").first
+        # username = username_element.text_content() if username_element.count() > 0 else "未知用户"
+        # print(f"用户名称: {username}")
 
         # 确保点击"笔记"标签
         try:
@@ -188,7 +200,7 @@ def extract_xiaohongshu_notes(profile_id, cookie_file='xiaohongshu_cookies.json'
                 results.append(note_data)
 
                 # 将笔记保存到文件
-                with open(f"xiaohongshu_data/{username}_笔记_{i+1}.json", "w", encoding="utf-8") as f:
+                with open(f"xiaohongshu_data/{profile_id}_笔记_{i+1}.json", "w", encoding="utf-8") as f:
                     json.dump(note_data, f, ensure_ascii=False, indent=4)
 
                 # 关闭笔记页面
