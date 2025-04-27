@@ -13,6 +13,7 @@
 # ========= Copyright 2023-2024 @ CAMEL-AI.org. All Rights Reserved. =========
 # Import from the correct module path
 from utils import run_society
+from owl.utils.enhanced_role_playing import arun_society
 import os
 import gradio as gr
 import time
@@ -255,6 +256,7 @@ def get_latest_logs(max_lines=100, queue_source=None):
 # Dictionary containing module descriptions
 MODULE_DESCRIPTIONS = {
     "run": "默认模式：使用OpenAI模型的默认的智能体协作模式，适合大多数任务。",
+    "run_xhs": "使用小红书模型处理任务",
     "run_mini": "使用使用OpenAI模型最小化配置处理任务",
     "run_gemini": "使用 Gemini模型处理任务",
     "run_deepseek_zh": "使用eepseek模型处理中文任务",
@@ -396,7 +398,10 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
         # 运行社会模拟
         try:
             logging.info("正在运行社会模拟...")
-            answer, chat_history, token_info = run_society(society)
+            if example_module == "run_xhs":
+                answer, chat_history, token_info = module.run_society(society)
+            else:
+                answer, chat_history, token_info = run_society(society)
             logging.info("社会模拟运行完成")
         except Exception as e:
             logging.error(f"运行社会模拟时发生错误: {str(e)}")
