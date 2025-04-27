@@ -1,0 +1,346 @@
+from io import BytesIO
+from typing import List, Optional
+from urllib.parse import urlparse
+
+import requests
+from PIL import Image
+
+from camel.logger import get_logger
+from camel.messages import BaseMessage
+from camel.models import BaseModelBackend, ModelFactory
+from camel.toolkits import FunctionTool
+from camel.toolkits.base import BaseToolkit
+from camel.types import ModelPlatformType, ModelType
+from camel.utils import MCPServer
+from multiprocessing import Pool, cpu_count
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from geopy.geocoders import Nominatim
+
+import os
+import exifread
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logger = get_logger(__name__)
+
+
+def get_image_location(image_path):
+    if not os.path.exists(image_path):
+        print("错误: 文件未找到!")
+        return None
+    try:
+        with open(image_path, 'rb') as f:
+            tags = exifread.process_file(f)
+            # 检查 GPS 相关标签是否存在
+            if 'GPS GPSLatitude' in tags and 'GPS GPSLongitude' in tags:
+                latitude = tags['GPS GPSLatitude']
+                longitude = tags['GPS GPSLongitude']
+                lat_ref = tags.get('GPS GPSLatitudeRef', 'N')
+                lon_ref = tags.get('GPS GPSLongitudeRef', 'E')
+
+                # 将经纬度转换为十进制格式
+                def convert_to_decimal(value, ref):
+                    d = float(value.values[0].num) / float(value.values[0].den)
+                    m = float(value.values[1].num) / float(value.values[1].den)
+                    s = float(value.values[2].num) / float(value.values[2].den)
+                    decimal = d + (m / 60) + (s / 3600)
+                    if ref in ['S', 'W']:
+                        decimal = -decimal
+                    return decimal
+
+                lat_decimal = convert_to_decimal(latitude, lat_ref)
+                lon_decimal = convert_to_decimal(longitude, lon_ref)
+
+                return lat_decimal, lon_decimal
+            else:
+                print("错误: 图片中未找到 GPS 信息。")
+                return None
+    except Exception as e:
+        print(f"错误: 发生了一个未知错误: {e}")
+        return None
+    
+
+def convert_coordinates_to_address(latitude, longitude):
+
+    geolocator = Nominatim(user_agent="my_geo_app")
+    location_str = f"{latitude},{longitude}"
+
+    try:
+        location = geolocator.reverse(location_str)
+        if location:
+            return location.address
+        else:
+            print("未找到对应的地址信息。")
+    except Exception as e:
+        print(f"发生错误: {e}")
+
+    return None
+
+
+@MCPServer()
+class ImageAnalysisToolkit(BaseToolkit):
+    r"""A toolkit for comprehensive image analysis and understanding.
+    The toolkit uses vision-capable language models to perform these tasks.
+    """
+
+    def __init__(self, model: Optional[BaseModelBackend] = None):
+        r"""Initialize the ImageAnalysisToolkit.
+
+        Args:
+            model (Optional[BaseModelBackend]): The model backend to use for
+                image analysis tasks. This model should support processing
+                images for tasks like image description and visual question
+                answering. If None, a default model will be created using
+                ModelFactory. (default: :obj:`None`)
+        """
+        if model:
+            self.model = model
+        else:
+            self.model = ModelFactory.create(
+                model_platform=ModelPlatformType.DEFAULT,
+                model_type=ModelType.DEFAULT,
+            )
+
+    def image_to_text(
+        self, image_path: str, sys_prompt: Optional[str] = None
+    ) -> str:
+        r"""Generates textual description of an image with optional custom
+        prompt.
+
+        Args:
+            image_path (str): Local path or URL to an image file.
+            sys_prompt (Optional[str]): Custom system prompt for the analysis.
+                (default: :obj:`None`)
+
+        Returns:
+            str: Natural language description of the image.
+        """
+        default_content = '''You are an image analysis expert. Provide a 
+            detailed description including text if present.'''
+
+        system_msg = BaseMessage.make_assistant_message(
+            role_name="Senior Computer Vision Analyst, Output in Chinese",
+            content=sys_prompt if sys_prompt else default_content,
+        )
+
+        return self._analyze_image(
+            image_path=image_path,
+            prompt="Please describe the contents of this image.",
+            system_message=system_msg,
+        )
+    
+    def images_to_text(
+        self, image_path_list: List[str], sys_prompt: Optional[str] = None
+    ) -> str:
+        r"""Generates textual description of image path list with optional custom prompt.
+
+        Args:
+            image_path_list: List[str]: A list of Local path or URL to an image file.
+            sys_prompt (Optional[str]): Custom system prompt for the analysis.
+                (default: :obj:`None`)
+
+        Returns:
+            str: Natural language description of the image.
+        """
+        result_list = [None] * len(image_path_list)  # 预分配结果列表
+        use_threading = True    
+        max_workers = cpu_count()
+        if use_threading:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(
+                    self.image_to_text, image_path, sys_prompt): idx 
+                    for idx, image_path in enumerate(image_path_list)}
+                for future in as_completed(futures):
+                    idx = futures[future]
+                    result_list[idx] = future.result()
+        else:
+            for idx, image_path in enumerate(image_path_list):
+                result_list[idx] = self.image_to_text(image_path, sys_prompt)
+        return result_list
+
+    def ask_question_about_image(
+        self, image_path: str, question: str, sys_prompt: Optional[str] = None
+    ) -> str:
+        r"""Answers image questions with optional custom instructions.
+
+        Args:
+            image_path (str): Local path or URL to an image file.
+            question (str): Query about the image content.
+            sys_prompt (Optional[str]): Custom system prompt for the analysis.
+                (default: :obj:`None`)
+
+        Returns:
+            str: Detailed answer based on visual understanding
+        """
+        default_content = """Answer questions about images by:
+            1. Careful visual inspection
+            2. Contextual reasoning
+            3. Text transcription where relevant
+            4. Logical deduction from visual evidence"""
+
+        system_msg = BaseMessage.make_assistant_message(
+            role_name="Visual QA Specialist",
+            content=sys_prompt if sys_prompt else default_content,
+        )
+
+        return self._analyze_image(
+            image_path=image_path,
+            prompt=question,
+            system_message=system_msg,
+        )
+    
+    def ask_question_about_images(
+        self, image_path_list:List[str], question: str, sys_prompt: Optional[str] = None
+    ) -> str:
+        r"""Answers image questions with optional custom instructions.
+
+        Args:
+            image_path_list (List[str]): Local path or URL to an image file.
+            question (str): Query about the image content.
+            sys_prompt (Optional[str]): Custom system prompt for the analysis.
+                (default: :obj:`None`)
+
+        Returns:
+            str: Detailed answer based on visual understanding
+        """
+        use_threading = True
+        max_workers = cpu_count()
+
+        if use_threading:
+            result_list = [None] * len(image_path_list)  # 预分配结果列表
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(
+                    self.ask_question_about_image, image_path, question, sys_prompt): idx 
+                    for idx, image_path in enumerate(image_path_list)}
+                for future in as_completed(futures):
+                    idx = futures[future]
+                    result_list[idx] = future.result()
+        else:
+            result_list = []
+            for image_path in image_path_list:
+                print("image path: {}".format(image_path))
+                result = self.ask_question_about_image(
+                    image_path, question, sys_prompt)
+                result_list.append(result)
+        return result_list
+    
+    def _load_image(self, image_path: str) -> Image.Image:
+        r"""Loads an image from either local path or URL.
+
+        Args:
+            image_path (str): Local path or URL to image.
+
+        Returns:
+            Image.Image: Loaded PIL Image object.
+
+        Raises:
+            ValueError: For invalid paths/URLs or unreadable images.
+            requests.exceptions.RequestException: For URL fetch failures.
+        """
+        parsed = urlparse(image_path)
+
+        if parsed.scheme in ("http", "https"):
+            logger.debug(f"Fetching image from URL: {image_path}")
+            try:
+                response = requests.get(image_path, timeout=15)
+                response.raise_for_status()
+                return Image.open(BytesIO(response.content))
+            except requests.exceptions.RequestException as e:
+                logger.error(f"URL fetch failed: {e}")
+                raise
+        else:
+            logger.debug(f"Loading local image: {image_path}")
+            try:
+                return Image.open(image_path)
+            except Exception as e:
+                logger.error(f"Image loading failed: {e}")
+                raise ValueError(f"Invalid image file: {e}")
+
+    def _analyze_image(
+        self,
+        image_path: str,
+        prompt: str,
+        system_message: BaseMessage,
+    ) -> str:
+        r"""Core analysis method handling image loading and processing.
+
+        Args:
+            image_path (str): Image location.
+            prompt (str): Analysis query/instructions.
+            system_message (BaseMessage): Custom system prompt for the
+                analysis.
+
+        Returns:
+            str: Analysis result or error message.
+        """
+        try:
+            image = self._load_image(image_path)
+            logger.info(f"Analyzing image: {image_path}")
+
+            from camel.agents.chat_agent import ChatAgent
+
+            agent = ChatAgent(
+                system_message=system_message,
+                model=self.model,
+            )
+
+            user_msg = BaseMessage.make_user_message(
+                role_name="User",
+                content=prompt,
+                image_list=[image],
+            )
+
+            response = agent.step(user_msg)
+            agent.reset()
+            return response.msgs[0].content
+
+        except (ValueError, requests.exceptions.RequestException) as e:
+            logger.error(f"Image handling error: {e}")
+            return f"Image error: {e!s}"
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            return f"Analysis failed: {e!s}"
+
+    def get_tools(self) -> List[FunctionTool]:
+        r"""Returns a list of FunctionTool objects representing the functions
+            in the toolkit.
+
+        Returns:
+            List[FunctionTool]: A list of FunctionTool objects representing the
+                functions in the toolkit.
+        """
+        # FunctionTool(self.ask_question_about_image)
+        
+        return [
+            FunctionTool(self.images_to_text),
+            FunctionTool(self.ask_question_about_images)
+        ]
+
+
+
+if __name__ == "__main__":
+    base_url = os.getenv("OPENAI_API_BASE_URL")
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    model_platform = ModelPlatformType.QWEN
+    model_type = ModelType.QWEN_2_5_VL_72B
+
+    model = ModelFactory.create(
+        model_platform=model_platform,
+        model_type=model_type,
+        model_config_dict={"temperature": 0},
+        api_key=api_key,
+        url=base_url,
+    )
+    image_analysis_toolkit = ImageAnalysisToolkit(
+        model=model)
+    
+    print("#" * 10)
+    filepath = "data/IMG_0030.JPG"
+    gps = get_image_location(filepath)
+    address = convert_coordinates_to_address(gps[0], gps[1])
+    print("address: {}".format(address))
+    answers = image_analysis_toolkit.ask_question_about_images(
+        [filepath, filepath], "图片里面有什么")
+    print("#" * 10)

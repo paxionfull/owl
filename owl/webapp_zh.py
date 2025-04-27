@@ -266,6 +266,7 @@ MODULE_DESCRIPTIONS = {
     "run_groq": "使用groq模型处理任务",
     "run_ppio": "使用ppio模型处理任务",
     "run_together_ai": "使用together ai模型处理任务",
+    "run_xhs": "使用小红书模型处理任务",
 }
 
 
