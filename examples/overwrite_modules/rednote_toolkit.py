@@ -217,7 +217,7 @@ class RedNoteToolkit(BaseToolkit):
 
                     results.append(note_data)
 
-                    with open(f"{self.data_dir}/{username}_笔记_{i+1}.json", "w", encoding="utf-8") as f:
+                    with open(f"{self.data_dir}/{profile_id}_笔记_{i+1}.json", "w", encoding="utf-8") as f:
                         json.dump(note_data, f, ensure_ascii=False, indent=4)
 
                     note_page.close()
