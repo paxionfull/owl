@@ -1,0 +1,20 @@
+{
+    "mcpServers": {
+        "image_mcp": {
+            "command": "python3",
+            "args": ["examples/mcp/image_mcp.py"]
+        },
+        "file_mcp": {
+            "command": "python3",
+            "args": ["examples/mcp/file_mcp.py"]
+        }, 
+        "code_mcp": {
+            "command": "python3",
+            "args": ["examples/mcp/code_mcp.py"]
+        },
+        "rednote_mcp": {
+            "command": "python3",
+            "args": ["examples/mcp/rednote_mcp.py"]
+        }
+    }
+}
