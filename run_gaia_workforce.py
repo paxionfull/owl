@@ -215,7 +215,7 @@ def evaluate_on_gaia():
     MAX_TRIES = 1
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
-    test_idx = [0, 1, 2]
+    test_idx = [1]
 
     if os.path.exists(f"tmp/"):
         shutil.rmtree(f"tmp/")

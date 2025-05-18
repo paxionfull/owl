@@ -137,6 +137,10 @@ class GAIABenchmark(BaseBenchmark):
     
     
     def _save_results_to_file(self, results: List[Dict[str, Any]], file_path: str):
+        # get base dir of file_path
+        base_dir = os.path.dirname(file_path)
+        os.makedirs(base_dir, exist_ok=True)
+        
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=4, ensure_ascii=False)
         f.close()
@@ -315,7 +319,7 @@ Please output with the final answer according to the requirements without any ot
         return self._generate_summary()
 
     
-    def run_single_agent_with_retry(
+    def run(
         self,
         agent: ChatAgent,
         on: Literal["valid", "test"],
@@ -327,6 +331,7 @@ Please output with the final answer according to the requirements without any ot
         save_result: bool = False,
         
     ) -> Dict[str, Any]:
+        r"""Run the benchmark with a single agent."""
         
         datas = self._load_tasks(on, level, randomize, subset, idx)
         
@@ -424,7 +429,6 @@ Please output with the final answer according to the requirements without any ot
         subset: Optional[int] = None,
         idx: Optional[List[int]] = None,
         save_result: bool = False,
-        filtered_tasks_file_path: Optional[str] = None,
     ) -> Dict[str, Any]:
         r"""Run the benchmark with retry mechanism.
 
@@ -439,11 +443,10 @@ Please output with the final answer according to the requirements without any ot
             subset (Optional[int]): Number of tasks to run. Defaults to None (all tasks).
             idx (Optional[List[int]]): Specific task indices to run. Defaults to None.
             save_result (bool): Whether to save results to file. Defaults to False.
-            filtered_tasks_file_path (Optional[str]): Path to the file containing filtered tasks. Defaults to None.
         Returns:
             Dict[str, Any]: Summary of benchmark results.
         """
-        tasks = self._load_tasks(on, level, randomize, subset, idx, filtered_tasks_file_path)
+        tasks = self._load_tasks(on, level, randomize, subset, idx)
         
         self._results = []
         

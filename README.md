@@ -9,8 +9,7 @@ This repository contains inference part code for the OWL framework (Workforce).
 
 ## Inference
 
-The camel version we use is `0.2.46`. To reproduce Workforce inference performance (69.70% - Claude-3.7 accuracy on GAIA benchmark and 60.61% - GPT-4o
-accuracy on GAIA benchmark), follow the steps below:
+The camel version we use is `0.2.46`. To reproduce Workforce inference performance on GAIA benchmark (69.70% - Claude-3.7 accuracy on GAIA benchmark, pass@1, and 60.61% - GPT-4o accuracy on GAIA benchmark, pass@3), follow the steps below:
 
 ### Installation and Setup
 
