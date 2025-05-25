@@ -43,4 +43,5 @@ python run_gaia_workforce.py
 python run_gaia_workforce_claude.py
 ```
 
+You can modify `test_idx` variable to specify the test case.
 
