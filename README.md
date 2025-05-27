@@ -28,8 +28,8 @@
 [Community](https://github.com/camel-ai/owl#community) |
 [Installation](#️-installation) |
 [Examples](https://github.com/camel-ai/owl/tree/main/owl) |
-[Paper](https://arxiv.org/abs/2303.17760) |
-[Technical Report](https://hypnotic-mind-6bd.notion.site/OWL-Optimized-Workforce-Learning-for-General-Multi-Agent-Assistance-in-Real-World-Task-Automation-1d4004aeb21380158749c7f84b20643f) |
+[Paper](https://github.com/camel-ai/owl/blob/main/assets/OWL_Technical_Report.pdf) |
+<!-- [Technical Report](https://hypnotic-mind-6bd.notion.site/OWL-Optimized-Workforce-Learning-for-General-Multi-Agent-Assistance-in-Real-World-Task-Automation-1d4004aeb21380158749c7f84b20643f) | -->
 [Citation](https://github.com/camel-ai/owl#citation) |
 [Contributing](https://github.com/camel-ai/owl/graphs/contributors) |
 [CAMEL-AI](https://www.camel-ai.org/)
