@@ -3,6 +3,7 @@ from camel.toolkits.base import BaseToolkit
 from camel.utils import MCPServer
 from typing import List, Any, Dict, Optional
 import win32com.client
+import json
 
 
 @MCPServer()
@@ -68,8 +69,7 @@ class OfficeToolkit(BaseToolkit):
         return excel_instances
     
     #获取word文本成功
-    def get_word_text(self, files_info: Dict[str, str]):
-        file_paths = files_info.get("Word")
+    def get_word_text(self, file_paths: list[str]):
         files_content = []
         
         if not file_paths:
@@ -127,8 +127,7 @@ class OfficeToolkit(BaseToolkit):
         return files_content
     
 
-    def get_ppt_text(self, files_info: Dict[str, str]):
-        file_paths = files_info.get("PowerPoint")
+    def get_ppt_text(self, file_paths: list[str]):
         files_content = []
         
         if not file_paths:
@@ -196,8 +195,7 @@ class OfficeToolkit(BaseToolkit):
 
         return files_content
 
-    def get_excel_text(self, files_info: Dict[str, str]):
-        file_paths = files_info.get("Excel")
+    def get_excel_text(self, file_paths: list[str]):
         files_content = []
         
         if not file_paths:
@@ -234,36 +232,63 @@ class OfficeToolkit(BaseToolkit):
     def get_all_office_instances(self):
         r"""检查用户正在使用的电脑上，有哪些office文档正在运行.
         office文档类型包括：Word, Excel, PowerPoint.
+
+        Returns:
+            str: 用户正在使用的office软件路径
         """
         word_paths = self.get_word_instances()
         ppt_paths = self.get_ppt_instances()
         excel_paths = self.get_excel_instances()
 
-        output = """
-用户正在使用的office软件路径如下：
-Word: 
-{}
-PowerPoint: 
-{}
-Excel: 
-{}
-""".format('\n'.join(word_paths), '\n'.join(ppt_paths), '\n'.join(excel_paths))
-        print(output)
-        return {
+#         output = """
+# 用户正在使用的office软件路径如下：
+# Word: 
+# {}
+# PowerPoint: 
+# {}
+# Excel: 
+# {}
+# """.format('\n'.join(word_paths), '\n'.join(ppt_paths), '\n'.join(excel_paths))
+#         print(output)
+        files_info = {
             "Word": word_paths,
             "PowerPoint": ppt_paths,
             "Excel": excel_paths
         }
+        files_info_str = json.dumps(files_info, ensure_ascii=False)
+        return files_info_str
     
-    def get_all_office_instances_content(self, files_info: Dict[str, str]):
+    def get_all_office_instances_content(self, file_paths: list[str]):
         r"""根据office文档路径，获取其内容.
         office文档类型包括：Word, Excel, PowerPoint.
-        """
-        words_content = self.get_word_text(files_info)
-        ppts_content = self.get_ppt_text(files_info)
-        excels_content = self.get_excel_text(files_info)
 
-        return words_content + ppts_content + excels_content
+        Args:
+            file_paths (list[str]): office文档路径列表，类型为list, 尽量包含所有正在运行的office文档
+
+        Returns:
+            str: 文档的内容
+        """
+        words_files = []
+        ppts_files = []
+        excels_files = []
+        for file_path in file_paths:
+            file_type = file_path.split(".")[-1]
+            if file_type in ["docx", "doc"]:
+                words_files.append(file_path)
+            elif file_type in ["pptx", "ppt"]:
+                ppts_files.append(file_path)
+            elif file_type in ["xlsx", "xls", "csv"]:
+                excels_files.append(file_path)
+        words_content = self.get_word_text(words_files)
+        ppts_content = self.get_ppt_text(ppts_files)
+        excels_content = self.get_excel_text(excels_files)
+        content_info = {
+            "Word": words_content,
+            "PowerPoint": ppts_content,
+            "Excel": excels_content
+        }
+        content_info_str = json.dumps(content_info, ensure_ascii=False)
+        return content_info_str
         
 
     def get_tools(self) -> List[FunctionTool]:
