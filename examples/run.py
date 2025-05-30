@@ -36,6 +36,8 @@ from examples.overwrite_modules.image_analysis import ImageAnalysisToolkit
 from examples.overwrite_modules.role_playing import RolePlaying
 from examples.overwrite_modules.rednote_toolkit import RedNoteToolkit
 from examples.overwrite_modules.code_execution import CodeExecutionToolkit
+from examples.overwrite_modules.office_toolkit import OfficeToolkit
+from examples.overwrite_modules.email_toolkit import EmailToolkit
 
 base_dir = pathlib.Path(__file__).parent.parent
 env_path = base_dir / "owl" / ".env"
@@ -113,9 +115,11 @@ def construct_society(question: str) -> RolePlaying:
         # SearchToolkit().search_google,  # Comment this out if you don't have google search
         # SearchToolkit().search_wiki,
         # *ExcelToolkit().get_tools(),
-        *DocumentProcessingToolkit(model=models["document"]).get_tools(),
+        # *DocumentProcessingToolkit(model=models["document"]).get_tools(),
         *FileWriteToolkit(output_dir="./").get_tools(),
-        *RedNoteToolkit().get_tools(),
+        # *RedNoteToolkit().get_tools(),
+        *OfficeToolkit().get_tools(),
+        *EmailToolkit().get_tools(),
     ]
 
     # 根据操作系统类型设置不同的路径
@@ -143,11 +147,13 @@ def construct_society(question: str) -> RolePlaying:
         # "task_type": TaskType.AI_SOCIETY,
         # "with_task_specify": True,
         # "task_specify_agent_kwargs": task_specify_agent_kwargs,
-        "with_task_planner": True,
-        "task_planner_agent_kwargs": task_planner_agent_kwargs,
-        "user_profile": user_profile,
-        "with_prompt_augmentation": True,
-        "prompt_augmentation_agent_kwargs": prompt_augmentation_agent_kwargs,
+
+        # yzy
+        # "with_task_planner": True,
+        # "task_planner_agent_kwargs": task_planner_agent_kwargs,
+        # "user_profile": user_profile,
+        # "with_prompt_augmentation": True,
+        # "prompt_augmentation_agent_kwargs": prompt_augmentation_agent_kwargs,
     }
 
     # Create and return the society
@@ -187,6 +193,8 @@ def main():
     # Default research question
 
     default_task = "Open Brave search, summarize the github stars, fork counts, etc. of camel-ai's camel framework, and write the numbers into a python file using the plot package, save it locally, and run the generated python file. Note: You have been provided with the necessary tools to complete this task."
+    default_task = "查看我电脑上打开的办公文档，并总结我的工作内容, 进而给出第二天详细的工作计划, 用中文回答"
+    default_task = "查看我2025年5月1日到2025年5月31日的邮件，总结我最近的工作内容, 进而给出第二天详细的工作计划, 用中文回答"
 
     # Override default task if command line argument is provided
     task = sys.argv[1] if len(sys.argv) > 1 else default_task
