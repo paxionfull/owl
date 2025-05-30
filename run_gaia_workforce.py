@@ -30,7 +30,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 LLM_MODEL = "gpt-4o-2024-11-20"
-# REASONING_MODEL = "deepseek-r1"
 REASONING_MODEL = "gpt-4o-2024-11-20"
 
 
@@ -83,7 +82,8 @@ def construct_agent_list() -> List[Dict[str, Any]]:
     document_processing_toolkit = DocumentProcessingToolkit(cache_dir="tmp")
     image_analysis_toolkit = ImageAnalysisToolkit(model=image_analysis_model)
     video_analysis_toolkit = VideoAnalysisToolkit(download_directory="tmp/video")
-    audio_analysis_toolkit = AudioAnalysisToolkit(cache_dir="tmp/audio", audio_reasoning_model=audio_reasoning_model)
+    # audio_analysis_toolkit = AudioAnalysisToolkit(cache_dir="tmp/audio", audio_reasoning_model=audio_reasoning_model)
+    audio_analysis_toolkit = AudioAnalysisToolkit(cache_dir="tmp/audio", audio_reasoning_model=None)
     code_runner_toolkit = CodeExecutionToolkit(sandbox="subprocess", verbose=True)
     browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
     excel_toolkit = ExcelToolkit()
@@ -117,7 +117,7 @@ Here are some tips that help you perform web search:
             FunctionTool(search_toolkit.search_wiki_revisions),
             FunctionTool(search_toolkit.search_archived_webpage),
             FunctionTool(document_processing_toolkit.extract_document_content),
-            # FunctionTool(browser_simulator_toolkit.browse_url),
+            FunctionTool(browser_simulator_toolkit.browse_url),
             FunctionTool(video_analysis_toolkit.ask_question_about_video),
         ]
     )
@@ -272,12 +272,16 @@ def evaluate_on_gaia():
     SAVE_RESULT = True
     # MAX_TRIES = 3
     MAX_TRIES = 1
-    PARALLEL = True  # 新增：是否启用并行处理
+    PARALLEL = False  # 新增：是否启用并行处理
     MAX_WORKERS = 10  # 新增：最大并行线程数
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
-    # test_idx = [1]
-    test_idx = list(range(53))
+    # test_idx = list(range(53))
+    test_idx = [30]
+    test_idx = [3]
+    test_idx = [13]
+    test_idx = [15]  # hard
+    test_idx = [16]
 
     if os.path.exists(f"tmp/"):
         shutil.rmtree(f"tmp/")

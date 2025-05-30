@@ -42,7 +42,7 @@ class AudioAnalysisToolkit(BaseToolkit):
         if cache_dir:
             self.cache_dir = cache_dir
 
-        self.client = openai.OpenAI()
+        self.client = openai.OpenAI(base_url=os.environ.get("OPENAI_API_BASE_URL"))
         self.audio_reasoning_model = audio_reasoning_model
         
     def get_audio_duration(file_path):
