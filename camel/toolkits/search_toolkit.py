@@ -584,6 +584,73 @@ class SearchToolkit(BaseToolkit):
         # If no answer found, return an empty list
         return responses
     
+    def search_serper_api(
+        self, query: str, num_result_pages: int = 5
+    ) -> List[Dict[str, Any]]:
+        r"""Use Google search engine to search information for the given query.
+
+        Args:
+            query (str): The query to be searched.
+            num_result_pages (int): The number of result pages to retrieve.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries where each dictionary
+            represents a website.
+                Each dictionary contains the following keys:
+                - 'result_id': A number in order.
+                - 'title': The title of the website.
+                - 'description': A brief description of the website.
+                - 'url': The URL of the website.
+
+                Example:
+                {
+                    'result_id': 1,
+                    'title': 'OpenAI',
+                    'description': 'An organization focused on ensuring that
+                    artificial general intelligence benefits all of humanity.',
+                    'url': 'https://www.openai.com'
+                }
+            title, description, url of a website.
+        """
+        import requests
+
+        SERPER_API_KEY = os.getenv("SERPER_API_KEY")
+        headers = {
+            "X-API-KEY": SERPER_API_KEY,
+            "Content-Type": "application/json",
+        }
+
+        params = {
+            "q": query,
+            # "gl": "cn",  # country
+            "sort": "date",
+            # "hl": "zh-CN",
+        }
+
+        responses = []
+        try:
+            response = requests.post(
+                f"https://google.serper.dev/search",
+                headers=headers,
+                params=params,
+                proxies=None,
+                timeout=5,
+            )
+            data = response.json()
+            if "organic" in data:
+                for item in data["organic"][:num_result_pages]:
+                    responses.append({
+                        "result_id": item["position"],
+                        "title": item["title"],
+                        "description": item["snippet"],
+                        "url": item["link"],
+                    })
+            else:
+                responses.append({"error": "google search failed."})
+        except Exception as e:
+            print(str(e))
+            responses.append({"error": "google search failed."})
+        return responses
 
     @dependencies_required("wolframalpha")
     def query_wolfram_alpha(

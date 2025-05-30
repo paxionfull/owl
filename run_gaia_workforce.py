@@ -26,49 +26,55 @@ from loguru import logger
 from utils import OwlWorkforceChatAgent, OwlGaiaWorkforce
 from utils.gaia import GAIABenchmark
 import shutil
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+
+LLM_MODEL = "gpt-4o-2024-11-20"
+# REASONING_MODEL = "deepseek-r1"
+REASONING_MODEL = "gpt-4o-2024-11-20"
 
 
 def construct_agent_list() -> List[Dict[str, Any]]:
 
     web_model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O,
+        model_type=LLM_MODEL,
         model_config_dict={"temperature": 0},
     )
     
     document_processing_model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O,
+        model_type=LLM_MODEL,
         model_config_dict={"temperature": 0},
     )
     
     reasoning_model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.O3_MINI,
+        model_type=REASONING_MODEL,
         model_config_dict={"temperature": 0},
     )
     
     image_analysis_model = ModelFactory.create( 
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O,
+        model_type=LLM_MODEL,
         model_config_dict={"temperature": 0},
     )
     
     audio_reasoning_model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.O3_MINI,
+        model_type=REASONING_MODEL,
         model_config_dict={"temperature": 0},
     )
     
     web_agent_model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.GPT_4O,
+        model_type=LLM_MODEL,
         model_config_dict={"temperature": 0},
     )
     
     planning_agent_model = ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
-        model_type=ModelType.O3_MINI,
+        model_type=REASONING_MODEL,
         model_config_dict={"temperature": 0},
     )
     
@@ -79,7 +85,7 @@ def construct_agent_list() -> List[Dict[str, Any]]:
     video_analysis_toolkit = VideoAnalysisToolkit(download_directory="tmp/video")
     audio_analysis_toolkit = AudioAnalysisToolkit(cache_dir="tmp/audio", audio_reasoning_model=audio_reasoning_model)
     code_runner_toolkit = CodeExecutionToolkit(sandbox="subprocess", verbose=True)
-    browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir="tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
+    browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
     excel_toolkit = ExcelToolkit()
 
 
@@ -105,12 +111,13 @@ Here are some tips that help you perform web search:
 """,
         model=web_model,
         tools=[
-            FunctionTool(search_toolkit.search_google),
+            # FunctionTool(search_toolkit.search_google),
+            FunctionTool(search_toolkit.search_serper_api),
             FunctionTool(search_toolkit.search_wiki),
             FunctionTool(search_toolkit.search_wiki_revisions),
             FunctionTool(search_toolkit.search_archived_webpage),
             FunctionTool(document_processing_toolkit.extract_document_content),
-            FunctionTool(browser_simulator_toolkit.browse_url),
+            # FunctionTool(browser_simulator_toolkit.browse_url),
             FunctionTool(video_analysis_toolkit.ask_question_about_video),
         ]
     )
@@ -168,7 +175,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
     coordinator_agent_kwargs = {
         "model": ModelFactory.create(
             model_platform=ModelPlatformType.OPENAI,
-            model_type=ModelType.O3_MINI,
+            model_type=REASONING_MODEL,
             model_config_dict={"temperature": 0},
         )
     }
@@ -176,7 +183,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
     task_agent_kwargs = {
         "model": ModelFactory.create(
             model_platform=ModelPlatformType.OPENAI,
-            model_type=ModelType.GPT_4O,
+            model_type=LLM_MODEL,
             model_config_dict={"temperature": 0},
         )
     }
@@ -184,7 +191,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
     answerer_agent_kwargs = {
         "model": ModelFactory.create(
             model_platform=ModelPlatformType.OPENAI,
-            model_type=ModelType.GPT_4O,
+            model_type=LLM_MODEL,
             model_config_dict={"temperature": 0},
         )
     }
@@ -207,38 +214,165 @@ def construct_workforce() -> OwlGaiaWorkforce:
     return workforce
 
 
+def process_single_task_index(
+    task_idx: int,
+    level: int,
+    on: str,
+    save_result: bool,
+    max_tries: int,
+    max_replanning_tries: int,
+    data_dir: str,
+    result_path: str,
+    thread_id: int
+) -> Dict[str, Any]:
+    """处理单个任务索引，用于并行执行"""
+    
+    # 为每个线程创建独立的workforce和benchmark
+    workforce = construct_workforce()
+    
+    benchmark = GAIABenchmark(
+        data_dir=data_dir,
+        save_to=f"{result_path}_thread_{thread_id}.json",
+    )
+    
+    logger.info(f"Thread {thread_id}: Processing task index {task_idx}")
+    
+    try:
+        result = benchmark.run_workforce_with_retry(
+            workforce,
+            on=on,
+            level=level,
+            idx=[task_idx],  # 只处理单个任务
+            save_result=save_result,
+            max_tries=max_tries,
+            max_replanning_tries=max_replanning_tries,
+        )
+            
+        return {
+            'task_idx': task_idx,
+            'thread_id': thread_id,
+            'result': result,
+            'success': True
+        }
+        
+    except Exception as e:
+        logger.error(f"Thread {thread_id}: Error processing task {task_idx}: {e}")
+        return {
+            'task_idx': task_idx,
+            'thread_id': thread_id,
+            'error': str(e),
+            'success': False
+        }
+
+
 def evaluate_on_gaia():
     
     LEVEL = 1
     on="valid"
     SAVE_RESULT = True
-    MAX_TRIES = 3
+    # MAX_TRIES = 3
+    MAX_TRIES = 1
+    PARALLEL = True  # 新增：是否启用并行处理
+    MAX_WORKERS = 10  # 新增：最大并行线程数
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
-    test_idx = [1]
+    # test_idx = [1]
+    test_idx = list(range(53))
 
     if os.path.exists(f"tmp/"):
         shutil.rmtree(f"tmp/")
     
-    benchmark = GAIABenchmark(
-        data_dir="data/gaia",
-        save_to=SAVE_RESULT_PATH,
-    )
-    
-    workforce = construct_workforce()
-    
-    result = benchmark.run_workforce_with_retry(
-        workforce,
-        on=on,
-        level=LEVEL,
-        idx=test_idx,
-        save_result=SAVE_RESULT,
-        max_tries=MAX_TRIES,
-        max_replanning_tries=2
-    )
-    
-    logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
-    logger.success(f"Accuracy: {result['accuracy']}")
+    if PARALLEL and len(test_idx) > 1:
+        # 并行处理模式
+        logger.info(f"Using parallel processing with {MAX_WORKERS} workers for {len(test_idx)} tasks")
+        
+        # 确保结果目录存在
+        os.makedirs(os.path.dirname(SAVE_RESULT_PATH), exist_ok=True)
+        
+        all_results = []
+        total_correct = 0
+        total_tasks = 0
+        
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            # 提交所有任务
+            future_to_task = {}
+            for i, task_idx in enumerate(test_idx):
+                future = executor.submit(
+                    process_single_task_index,
+                    task_idx=task_idx,
+                    level=LEVEL,
+                    on=on,
+                    save_result=SAVE_RESULT,
+                    max_tries=MAX_TRIES,
+                    max_replanning_tries=2,
+                    data_dir="data/gaia",
+                    result_path=SAVE_RESULT_PATH.replace('.json', ''),
+                    thread_id=i
+                )
+                future_to_task[future] = task_idx
+            
+            # 收集结果
+            for future in as_completed(future_to_task):
+                task_idx = future_to_task[future]
+                try:
+                    task_result = future.result()
+                    if task_result['success']:
+                        result = task_result['result']
+                        all_results.extend(result.get('results', []))
+                        total_correct += result.get('correct', 0)
+                        total_tasks += result.get('total', 0)
+                        logger.success(f"Task {task_idx} completed. Correct: {result.get('correct', 0)}/{result.get('total', 0)}")
+                    else:
+                        logger.error(f"Task {task_idx} failed: {task_result.get('error', 'Unknown error')}")
+                        total_tasks += 1  # 仍然计入总数
+                except Exception as exc:
+                    logger.error(f"Task {task_idx} generated an exception: {exc}")
+                    total_tasks += 1
+        
+        # 保存合并后的结果
+        if SAVE_RESULT:
+            final_result = {
+                "total": total_tasks,
+                "correct": total_correct,
+                "accuracy": total_correct / total_tasks if total_tasks > 0 else 0,
+                "results": all_results
+            }
+            
+            with open(SAVE_RESULT_PATH, 'w', encoding='utf-8') as f:
+                json.dump(final_result, f, indent=2, ensure_ascii=False)
+            
+            # 清理线程特定的结果文件
+            for i in range(len(test_idx)):
+                thread_file = f"{SAVE_RESULT_PATH.replace('.json', '')}_thread_{i}.json"
+                if os.path.exists(thread_file):
+                    os.remove(thread_file)
+        
+        logger.success(f"Parallel processing completed. Correct: {total_correct}, Total: {total_tasks}")
+        logger.success(f"Accuracy: {total_correct / total_tasks if total_tasks > 0 else 0}")
+        
+    else:
+        # 原始顺序处理模式
+        logger.info("Using sequential processing")
+        
+        benchmark = GAIABenchmark(
+            data_dir="data/gaia",
+            save_to=SAVE_RESULT_PATH,
+        )
+        
+        workforce = construct_workforce()
+
+        result = benchmark.run_workforce_with_retry(
+            workforce,
+            on=on,
+            level=LEVEL,
+            idx=test_idx,
+            save_result=SAVE_RESULT,
+            max_tries=MAX_TRIES,
+            max_replanning_tries=2,
+        )
+        
+        logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
+        logger.success(f"Accuracy: {result['accuracy']}")
 
 
 if __name__ == "__main__":

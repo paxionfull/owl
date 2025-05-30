@@ -46,6 +46,35 @@ class DocumentProcessingToolkit(BaseToolkit):
         self.cache_dir = "tmp/"
         if cache_dir:
             self.cache_dir = cache_dir
+            
+        # Initialize browser related attributes
+        self._browser = None
+        self._browser_context = None
+        self._browser_init_lock = asyncio.Lock()
+    
+    async def _init_browser(self):
+        """Initialize the browser if it hasn't been initialized yet."""
+        if self._browser is None:
+            async with self._browser_init_lock:
+                # Double check to prevent race condition
+                if self._browser is None:
+                    from playwright.async_api import async_playwright
+                    playwright = await async_playwright().start()
+                    self._browser = await playwright.chromium.launch(headless=True)
+                    self._browser_context = await self._browser.new_context()
+    
+    async def _cleanup_browser(self):
+        """Cleanup browser resources."""
+        if self._browser is not None:
+            await self._browser_context.close()
+            await self._browser.close()
+            self._browser = None
+            self._browser_context = None
+            
+    def __del__(self):
+        """Ensure browser resources are cleaned up."""
+        if self._browser is not None:
+            asyncio.run(self._cleanup_browser())
     
     @retry((requests.RequestException))
     def extract_document_content(self, document_path: str, query: str = None) -> Tuple[bool, str]:
@@ -114,8 +143,7 @@ class DocumentProcessingToolkit(BaseToolkit):
 
 
         if self._is_webpage(document_path):
-            
-            extracted_text = self._extract_webpage_content(document_path)      
+            extracted_text = asyncio.run(self._extract_webpage_content(document_path))      
             result_filtered = self._post_process_result(extracted_text, query)
             return True, result_filtered
         
@@ -157,47 +185,47 @@ class DocumentProcessingToolkit(BaseToolkit):
                     logger.error(f"Error occurred while processing pptx: {e}")
                     return False, f"Error occurred while processing pptx: {e}"
             
-            try:
-                result = asyncio.run(self._extract_content_with_chunkr(document_path))
-                # raise ValueError("Chunkr is not available.")
-                logger.debug(f"The extracted text from chunkr is: {result}")
-                result_filtered = self._post_process_result(result, query)
-                return True, result_filtered
+            # try:
+            #     result = asyncio.run(self._extract_content_with_chunkr(document_path))
+            #     # raise ValueError("Chunkr is not available.")
+            #     logger.debug(f"The extracted text from chunkr is: {result}")
+            #     result_filtered = self._post_process_result(result, query)
+            #     return True, result_filtered
 
-            except Exception as e:
-                logger.warning(f"Error occurred while using chunkr to process document: {e}")
-                if document_path.endswith(".pdf"):
-                    # try using pypdf to extract text from pdf
-                    try:
-                        from PyPDF2 import PdfReader
-                        if is_url:
-                            tmp_path = self._download_file(document_path)
-                            document_path = tmp_path
-
-                        with open(document_path, 'rb') as f:
-                            reader = PdfReader(f)
-                            extracted_text = ""
-                            for page in reader.pages:
-                                extracted_text += page.extract_text()
-                        
-                        result_filtered = self._post_process_result(extracted_text, query)
-                        return True, result_filtered
-
-                    except Exception as e:
-                        logger.error(f"Error occurred while processing pdf: {e}")
-                        return False, f"Error occurred while processing pdf: {e}"
-                
-                # use unstructured to extract text from file
+            # except Exception as e:
+            #     logger.warning(f"Error occurred while using chunkr to process document: {e}")
+            if document_path.endswith(".pdf"):
+                # try using pypdf to extract text from pdf
                 try:
-                    from unstructured.partition.auto import partition
-                    extracted_text = partition(document_path)
-                    #return a list of text
-                    extracted_text = [item.text for item in extracted_text]
-                    return True, extracted_text
-                
+                    from PyPDF2 import PdfReader
+                    if is_url:
+                        tmp_path = self._download_file(document_path)
+                        document_path = tmp_path
+
+                    with open(document_path, 'rb') as f:
+                        reader = PdfReader(f)
+                        extracted_text = ""
+                        for page in reader.pages:
+                            extracted_text += page.extract_text()
+                    
+                    result_filtered = self._post_process_result(extracted_text, query)
+                    return True, result_filtered
+
                 except Exception as e:
-                    logger.error(f"Error occurred while processing document: {e}")
-                    return False, f"Error occurred while processing document: {e}"
+                    logger.error(f"Error occurred while processing pdf: {e}")
+                    return False, f"Error occurred while processing pdf: {e}"
+            
+            # use unstructured to extract text from file
+            try:
+                from unstructured.partition.auto import partition
+                extracted_text = partition(document_path)
+                #return a list of text
+                extracted_text = [item.text for item in extracted_text]
+                return True, extracted_text
+            
+            except Exception as e:
+                logger.error(f"Error occurred while processing document: {e}")
+                return False, f"Error occurred while processing document: {e}"
     
     
     def _post_process_result(self, result: str, query: str, process_model: BaseModelBackend = None) -> str:
@@ -237,7 +265,8 @@ Query:
         if process_model is None:
             process_model = ModelFactory.create(
                 model_platform=ModelPlatformType.OPENAI,
-                model_type=ModelType.O3_MINI,
+                # model_type=ModelType.O3_MINI,
+                model_type="gpt-4o-2024-11-20",
                 model_config_dict={"temperature": 0.0}
             )
             
@@ -304,7 +333,6 @@ Query:
 
     @retry(requests.RequestException)
     async def _extract_content_with_chunkr(self, document_path: str, output_format: Literal['json', 'markdown'] = 'markdown') -> str:
-        
         chunkr = Chunkr(api_key=os.getenv("CHUNKR_API_KEY"))
         
         result = await chunkr.upload(document_path)
@@ -337,11 +365,14 @@ Query:
     
     
     @retry(requests.RequestException, delay=60, backoff=2, max_delay=120)
-    def _extract_webpage_content_with_html2text(self, url: str) -> str:
+    async def _extract_webpage_content_with_html2text(self, url: str) -> str:
         import html2text
+        import aiohttp
         h = html2text.HTML2Text()
-        response = requests.get(url, headers=self.headers)
-        html_content = response.text
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=self.headers) as response:
+                html_content = await response.text()
         
         h.ignore_links = False
         h.ignore_images = False
@@ -359,56 +390,52 @@ Query:
     
 
     @retry(RuntimeError, delay=60, backoff=2, max_delay=120)
-    def _extract_webpage_content(self, url: str) -> str:
-        api_key = os.getenv("FIRECRAWL_API_KEY")
-        from firecrawl import FirecrawlApp
-
-        # Initialize the FirecrawlApp with your API key
-        app = FirecrawlApp(api_key=api_key)
-
+    async def _extract_webpage_content(self, url: str) -> str:
+        """Extract content from a webpage using Playwright."""
         try:
-            data = app.crawl_url(
-                url,
-                params={
-                'limit': 1,
-                'scrapeOptions': {'formats': ['markdown']}
-            }
-        )
+            from playwright.async_api import TimeoutError
+            
+            # Initialize browser if needed
+            await self._init_browser()
+            
+            # Create a new page in the existing context
+            page = await self._browser_context.new_page()
+            
+            try:
+                # Go to the URL and wait only for domcontentloaded
+                await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                
+                # Wait a short time for any critical dynamic content
+                await page.wait_for_timeout(1000)
+                
+                # Extract text content
+                text_content = await page.evaluate("""() => {
+                    return document.body.innerText;
+                }""")
+                
+            except TimeoutError:
+                logger.warning(f"Timeout while loading {url}, attempting to extract available content")
+                # Try to extract whatever content is available
+                text_content = await page.evaluate("""() => {
+                    return document.body.innerText;
+                }""")
+            
+            finally:
+                # Close only the page, keep the browser running
+                await page.close()
+            
+            if not text_content or len(text_content.strip()) == 0:
+                logger.debug("No content found using Playwright, falling back to html2text")
+                return await self._extract_webpage_content_with_html2text(url)
+            
+            return text_content
             
         except Exception as e:
-            if '403' in str(e):
-                logger.error(f"Error: {e}")
-                return e
-            elif "429" in str(e):
-                # too many requests
-                logger.error(f"Error: {e}")
-                raise RuntimeError(f"Error: {e}")
-            
-            elif "Payment Required" in str(e):
-                logger.error(f"Error: {e}")
-                extracted_text = self._extract_webpage_content_with_html2text(url)
-                logger.debug(f"The extracted text from html2text is: {extracted_text}")
-                return extracted_text
-            else:
-                raise e
-
-        logger.debug(f"Extracted data from {url} using firecrawl: {data}")
-        if len(data['data']) == 0:
-            if data['success'] == True:
-                logger.debug(f"Trying to use html2text to get the text.")
-                # try using html2text to get the text
-                extracted_text = self._extract_webpage_content_with_html2text(url)
-                logger.debug(f"The extracted text from html2text is: {extracted_text}")
-                
-                if len(extracted_text) == 0:
-                    return "No content found on the webpage."
-                else:
-                    return extracted_text
-
-            else:
-                return "Error while crawling the webpage."
-
-        return str(data['data'][0]['markdown'])
+            logger.error(f"Error extracting content with Playwright: {e}")
+            logger.debug("Falling back to html2text")
+            # If there's a browser error, cleanup and retry with html2text
+            await self._cleanup_browser()
+            return await self._extract_webpage_content_with_html2text(url)
     
 
     def _download_file(self, url: str):

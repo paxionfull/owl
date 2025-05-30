@@ -36,6 +36,7 @@ from camel.societies.workforce.utils import (
     check_if_running,
 )
 from typing import Tuple
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -502,6 +503,7 @@ class OwlGaiaWorkforce(OwlWorkforce):
             "You are a helpful assistant that can answer questions and provide final answers.",
             **(answerer_agent_kwargs or {})
         )
+        self.answerer_agent_history: List[Dict[str, Any]] = []
     
     
     def get_overall_task_solve_trajectory(self) -> List[List[Dict[str, Any]]]:
@@ -525,6 +527,7 @@ class OwlGaiaWorkforce(OwlWorkforce):
         overall_history["subtasks_history"] = subtasks_history
         overall_history["planner_history"] = self.task_agent.chat_history
         overall_history["coordinator_history"] = self.coordinator_agent.chat_history
+        overall_history["answerer_history"] = self.answerer_agent_history
             
         self.overall_task_solve_trajectory.append(overall_history)
 
@@ -564,6 +567,8 @@ Please output with the final answer according to the requirements without any ot
     """    
         
         resp = self.answerer_agent.step(prompt)
+        self.answerer_agent_history.append(
+            deepcopy(self.answerer_agent.chat_history))
         return resp.msg.content
 
 
