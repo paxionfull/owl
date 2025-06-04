@@ -14,7 +14,7 @@ import requests
 import mimetypes
 import json
 from retry import retry
-from typing import List, Dict, Any, Optional, Tuple, Literal
+from typing import List, Dict, Any, Optional, Tuple, Literal, Union
 from PIL import Image
 from io import BytesIO
 from loguru import logger
@@ -77,18 +77,130 @@ class DocumentProcessingToolkit(BaseToolkit):
             asyncio.run(self._cleanup_browser())
     
     @retry((requests.RequestException))
-    def extract_document_content(self, document_path: str, query: str = None) -> Tuple[bool, str]:
-        r"""Extract the content of a given document (or url) and return the processed text.
+    def extract_document_content(self, document_path: List[str], query: str = None) -> Tuple[bool, str]:
+        r"""Extract the content of a list of given documents (or urls) and return the processed text. Try to process the document(s) as much as possible.
         It may filter out some information, resulting in inaccurate content.
 
         Args:
-            document_path (str): The path of the document to be processed, either a local path or a URL. It can process image, audio files, zip files and webpages, etc.
+            document_path (List[str]): The path(s) of the document(s) to be processed, either a local path or a URL. It can process image, audio files, zip files and webpages, etc.
             query (str): The query to be used for retrieving the content. If the content is too long, the query will be used to identify which part contains the relevant information (like RAG). The query should be consistent with the current task.
 
         Returns:
+            Tuple[bool, str]: A tuple containing a boolean indicating whether the document was processed successfully, and the content of the document(s) (if success). When multiple documents are provided, content will be concatenated.
+        """
+        # Handle list of document paths
+        if isinstance(document_path, list):
+            logger.debug(f"Calling extract_document_content function with multiple documents: {len(document_path)} files")
+            logger.debug(document_path)
+            
+            # Separate URLs from local files
+            urls = []
+            local_files = []
+            path_index_map = {}  # Maps path to original index
+            
+            for i, path in enumerate(document_path):
+                path_index_map[path] = i
+                parsed_url = urlparse(path)
+                is_url = all([parsed_url.scheme, parsed_url.netloc])
+                if is_url:
+                    urls.append(path)
+                else:
+                    local_files.append(path)
+            
+            # Process URLs asynchronously in batch
+            url_results = {}
+            if urls:
+                logger.debug(f"Processing {len(urls)} URLs asynchronously")
+                url_results = asyncio.run(self._extract_multiple_urls_content(urls, query))
+            
+            # Process local files synchronously
+            local_results = {}
+            for path in local_files:
+                try:
+                    success, content = self._extract_single_document_content(path, query)
+                    local_results[path] = (success, content)
+                except Exception as e:
+                    local_results[path] = (False, str(e))
+            
+            # Combine results in original order
+            all_contents = []
+            all_success = True
+            
+            for i, path in enumerate(document_path):
+                if path in url_results:
+                    success, content = url_results[path]
+                else:
+                    success, content = local_results[path]
+                
+                if success:
+                    all_contents.append(f"=== Document {i+1}: {path} ===\n{content}\n")
+                else:
+                    all_success = False
+                    all_contents.append(f"=== Document {i+1}: {path} ===\nFailed to process: {content}\n")
+            
+            combined_content = "\n".join(all_contents)
+            return all_success, combined_content
+        
+        # Handle single document path (existing logic)
+        else:
+            logger.debug(f"Calling extract_document_content function with document_path=`{document_path}`")
+            return self._extract_single_document_content(document_path, query)
+    
+    async def _extract_multiple_urls_content(self, urls: List[str], query: str = None) -> Dict[str, Tuple[bool, str]]:
+        r"""Extract content from multiple URLs asynchronously.
+        
+        Args:
+            urls (List[str]): List of URLs to process.
+            query (str): The query to be used for retrieving the content.
+            
+        Returns:
+            Dict[str, Tuple[bool, str]]: Dictionary mapping URL to (success, content) tuple.
+        """
+        import concurrent.futures
+        
+        async def _extract_single_url_async(url: str) -> Tuple[str, bool, str]:
+            """Extract content from a single URL asynchronously."""
+            try:
+                # Check if it's a webpage asynchronously
+                is_webpage = await self._is_webpage_async(url)
+                if is_webpage:
+                    extracted_text = await self._extract_webpage_content(url)
+                    result_filtered = self._post_process_result(extracted_text, query)
+                    return url, True, result_filtered
+                else:
+                    # For non-webpage URLs, fall back to synchronous processing
+                    success, content = self._extract_single_document_content(url, query)
+                    return url, success, content
+            except Exception as e:
+                logger.error(f"Error processing URL {url}: {e}")
+                return url, False, str(e)
+        
+        # Process all URLs concurrently
+        tasks = [_extract_single_url_async(url) for url in urls]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Convert results to dictionary
+        url_results = {}
+        for result in results:
+            if isinstance(result, Exception):
+                # This shouldn't happen with return_exceptions=True, but just in case
+                logger.error(f"Unexpected exception in URL processing: {result}")
+                continue
+            url, success, content = result
+            url_results[url] = (success, content)
+        
+        return url_results
+
+    def _extract_single_document_content(self, document_path: str, query: str = None) -> Tuple[bool, str]:
+        r"""Extract the content of a single document (or url) and return the processed text.
+        
+        Args:
+            document_path (str): The path of the document to be processed, either a local path or a URL.
+            query (str): The query to be used for retrieving the content.
+            
+        Returns:
             Tuple[bool, str]: A tuple containing a boolean indicating whether the document was processed successfully, and the content of the document (if success).
         """
-        logger.debug(f"Calling extract_document_content function with document_path=`{document_path}`")
 
         if any(document_path.endswith(ext) for ext in ['.jpg', '.jpeg', '.png']):
             res = self.image_tool.ask_question_about_image(document_path, "Please make a detailed caption about the image.")
@@ -154,7 +266,7 @@ class DocumentProcessingToolkit(BaseToolkit):
             is_url = all([parsed_url.scheme, parsed_url.netloc])
             if not is_url:
                 if not os.path.exists(document_path):
-                    return f"Document not found at path: {document_path}."
+                    return False, f"Document not found at path: {document_path}."
 
             # if is docx file, use docx2markdown to convert it
             if document_path.endswith(".docx"):
@@ -300,6 +412,33 @@ Query:
         else:
             return result
 
+
+    async def _is_webpage_async(self, url: str) -> bool:
+        r"""Judge whether the given URL is a webpage asynchronously."""
+        try:
+            parsed_url = urlparse(url)
+            is_url = all([parsed_url.scheme, parsed_url.netloc])
+            if not is_url:
+                return False
+
+            path = parsed_url.path
+            file_type, _ = mimetypes.guess_type(path)
+            if file_type and 'text/html' in file_type:
+                return True
+            
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                async with session.head(url, allow_redirects=True, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    content_type = response.headers.get("Content-Type", "").lower()
+                    
+                    if "text/html" in content_type:
+                        return True
+                    else:
+                        return False
+        
+        except Exception as e:
+            logger.warning(f"Error while checking the URL: {e}")
+            return False
 
     def _is_webpage(self, url: str) -> bool:
         r"""Judge whether the given URL is a webpage."""

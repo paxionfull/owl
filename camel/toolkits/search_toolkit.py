@@ -612,7 +612,7 @@ class SearchToolkit(BaseToolkit):
                 }
             title, description, url of a website.
         """
-        num_result_pages = 5  # TODO: hardcoding
+        num_result_pages = 1  # TODO: hardcoding
         import requests
 
         SERPER_API_KEY = os.getenv("SERPER_API_KEY")

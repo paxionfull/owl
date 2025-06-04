@@ -28,6 +28,7 @@ from utils.gaia import GAIABenchmark
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+from examples.overwrite_modules.browser_user_toolkit import BrowserUseToolkit
 
 LLM_MODEL = "gpt-4o-2024-11-20"
 REASONING_MODEL = "gpt-4o-2024-11-20"
@@ -87,6 +88,7 @@ def construct_agent_list() -> List[Dict[str, Any]]:
     code_runner_toolkit = CodeExecutionToolkit(sandbox="subprocess", verbose=True)
     browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
     excel_toolkit = ExcelToolkit()
+    browser_user_toolkit = BrowserUseToolkit(headless=True)
 
 
     web_agent = OwlWorkforceChatAgent(
@@ -99,6 +101,7 @@ Keep in mind that:
 - When looking for specific numerical values (e.g., dollar amounts), prioritize reliable sources and avoid relying only on search snippets.  
 - When solving tasks that require web searches, check Wikipedia first before exploring other websites.  
 - You can also simulate browser actions to get more information or verify the information you have found.
+- If extracting webpage content cannot provide the detailed information about the answer, you should use browser simulation to get more information, else you don't need to use browser simulation.
 - Browser simulation is also helpful for finding target URLs. Browser simulation operations do not necessarily need to find specific answers, but can also help find web page URLs that contain answers (usually difficult to find through simple web searches). You can find the answer to the question by performing subsequent operations on the URL, such as extracting the content of the webpage.
 - Do not solely rely on document tools or browser simulation to find the answer, you should combine document tools and browser simulation to comprehensively process web page information. Some content may need to do browser simulation to get, or some content is rendered by javascript.
 - In your response, you should mention the urls you have visited and processed.
@@ -108,7 +111,9 @@ Here are some tips that help you perform web search:
 - If the question is complex, search results typically do not provide precise answers. It is not likely to find the answer directly using search toolkit only, the search query should be concise and focuses on finding official sources rather than direct answers.
   For example, as for the question "What is the maximum length in meters of #9 in the first National Geographic short on YouTube that was ever released according to the Monterey Bay Aquarium website?", your first search term must be coarse-grained like "National Geographic YouTube" to find the youtube website first, and then try other fine-grained search terms step-by-step to find more urls.
 - The results you return do not have to directly answer the original question, you only need to collect relevant information.
+- If there are multiple documents to be processed, you should process all the documents in the list at once, do not process one by one.
 """,
+# - If extracting webpage content cannot provide the detailed information about the answer, you should use browser simulation to get more information, else you don't need to use browser simulation.
         model=web_model,
         tools=[
             # FunctionTool(search_toolkit.search_google),
@@ -117,7 +122,8 @@ Here are some tips that help you perform web search:
             FunctionTool(search_toolkit.search_wiki_revisions),
             FunctionTool(search_toolkit.search_archived_webpage),
             FunctionTool(document_processing_toolkit.extract_document_content),
-            FunctionTool(browser_simulator_toolkit.browse_url),
+            # FunctionTool(browser_simulator_toolkit.browse_url),
+            FunctionTool(browser_user_toolkit.browse_url),
             FunctionTool(video_analysis_toolkit.ask_question_about_video),
         ]
     )
@@ -272,16 +278,17 @@ def evaluate_on_gaia():
     SAVE_RESULT = True
     # MAX_TRIES = 3
     MAX_TRIES = 1
-    PARALLEL = False  # 新增：是否启用并行处理
-    MAX_WORKERS = 10  # 新增：最大并行线程数
+    PARALLEL = True  # 新增：是否启用并行处理
+    MAX_WORKERS = 20  # 新增：最大并行线程数
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
-    # test_idx = list(range(53))
-    test_idx = [30]
-    test_idx = [3]
-    test_idx = [13]
-    test_idx = [15]  # hard
-    test_idx = [16]
+    test_idx = list(range(53))
+    # test_idx = [30]
+    # test_idx = [3]
+    # test_idx = [13]
+    # test_idx = [16]
+    # test_idx = [15]  # hard
+    # test_idx = [1]
 
     if os.path.exists(f"tmp/"):
         shutil.rmtree(f"tmp/")

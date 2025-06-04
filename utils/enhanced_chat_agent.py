@@ -488,6 +488,9 @@ Please try other ways to get the information.
 
             if tool_call_requests := response.tool_call_requests:
                 # Process all tool calls
+                print(f"tool_call_requests: {tool_call_requests}")
+                # if len(tool_call_requests) > 1:
+                #     import pdb; pdb.set_trace()
                 for tool_call_request in tool_call_requests:
                     if tool_call_request.tool_name in self._external_tool_schemas:
                         if external_tool_call_requests is None:
