@@ -124,7 +124,7 @@ Here are some tips that help you perform web search:
             FunctionTool(search_toolkit.search_archived_webpage),
             FunctionTool(document_processing_toolkit.extract_document_content),
             # FunctionTool(browser_simulator_toolkit.browse_url),
-            # FunctionTool(browser_user_toolkit.browse_url),
+            FunctionTool(browser_user_toolkit.browse_url),
             FunctionTool(video_analysis_toolkit.ask_question_about_video),
         ]
     )
@@ -281,11 +281,11 @@ def evaluate_on_gaia():
     MAX_TRIES = 1
     # PARALLEL = False  # 新增：是否启用并行处理
     PARALLEL = True  # 新增：是否启用并行处理
-    MAX_WORKERS = 20  # 新增：最大并行线程数
+    MAX_WORKERS = 5  # 新增：最大并行线程数
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
     # test_idx = [16]
-    # test_idx = [15]  # browser use
+
     test_idx = [
         30, 
         44
@@ -311,9 +311,13 @@ def evaluate_on_gaia():
     #     # 26,
     #     # 33,
     # ] 
+    test_idx = [15]  # browser use
+    test_idx = [0, 2, 3, 5, 7, 9, 10, 13, 14, 16, 18, 21, 22, 25, 28, 29, 30, 31, 36, 38, 39, 42, 43, 46, 48, 50]
 
     test_idx = list(range(53))
 
+
+    # wrong cases
 
     if os.path.exists(f"tmp/"):
         shutil.rmtree(f"tmp/")
@@ -343,7 +347,7 @@ def evaluate_on_gaia():
                     max_replanning_tries=2,
                     data_dir="data/gaia",
                     result_path=SAVE_RESULT_PATH.replace('.json', ''),
-                    thread_id=i
+                    thread_id=task_idx  # 使用任务索引而不是线程序号
                 )
                 future_to_task[future] = task_idx
             

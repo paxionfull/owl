@@ -24,8 +24,10 @@ from urllib.parse import urlparse, urljoin
 import os
 import subprocess
 import xmltodict
+from playwright.async_api import Browser, BrowserContext, Page
 import asyncio
 import nest_asyncio
+import random
 nest_asyncio.apply()
 
 
@@ -34,7 +36,7 @@ class DocumentProcessingToolkit(BaseToolkit):
 
     This class provides method for processing docx, pdf, pptx, etc. It cannot process excel files.
     """
-    def __init__(self, cache_dir: Optional[str] = None):
+    def __init__(self, cache_dir: Optional[str] = None, headless: bool = True):
         self.image_tool = ImageAnalysisToolkit()
         self.audio_tool = AudioAnalysisToolkit()
         self.excel_tool = ExcelToolkit()
@@ -46,35 +48,111 @@ class DocumentProcessingToolkit(BaseToolkit):
         self.cache_dir = "tmp/"
         if cache_dir:
             self.cache_dir = cache_dir
+        
+        # Browser管理
+        self.headless = headless
+        self.playwright = None
+        self.browser: Optional[Browser] = None
+        self._is_initialized = False
+
+    async def _initialize_browser(self):
+        """初始化browser实例"""
+        if self._is_initialized:
+            return
+        
+        print("初始化DocumentProcessing Browser实例...")
+        from playwright.async_api import async_playwright
+        self.playwright = await async_playwright().start()
+        
+        # 反检测启动参数
+        launch_args = [
+            '--disable-blink-features=AutomationControlled',
+            '--disable-dev-shm-usage',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--no-first-run',
+            '--disable-background-networking',
+            '--disable-background-timer-throttling',
+            '--disable-renderer-backgrounding',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-popup-blocking',
+        ]
+        
+        self.browser = await self.playwright.chromium.launch(
+            headless=self.headless,
+            args=launch_args
+        )
+        
+        self._is_initialized = True
+        print("DocumentProcessing Browser初始化完成")
+
+    async def _create_context_and_page(self) -> tuple[BrowserContext, Page]:
+        """创建新的context和page"""
+        if not self._is_initialized:
+            await self._initialize_browser()
+        
+        # 创建context
+        context = await self.browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            viewport={'width': 1366, 'height': 768},
+            locale='zh-CN',
+            timezone_id='Asia/Shanghai'
+        )
+        
+        page = await context.new_page()
+        
+        # 添加反检测脚本
+        await page.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined,
+            });
             
-        # Initialize browser related attributes
-        self._browser = None
-        self._browser_context = None
-        self._browser_init_lock = asyncio.Lock()
-    
-    async def _init_browser(self):
-        """Initialize the browser if it hasn't been initialized yet."""
-        if self._browser is None:
-            async with self._browser_init_lock:
-                # Double check to prevent race condition
-                if self._browser is None:
-                    from playwright.async_api import async_playwright
-                    playwright = await async_playwright().start()
-                    self._browser = await playwright.chromium.launch(headless=True)
-                    self._browser_context = await self._browser.new_context()
-    
-    async def _cleanup_browser(self):
-        """Cleanup browser resources."""
-        if self._browser is not None:
-            await self._browser_context.close()
-            await self._browser.close()
-            self._browser = None
-            self._browser_context = None
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5],
+            });
             
-    def __del__(self):
-        """Ensure browser resources are cleaned up."""
-        if self._browser is not None:
-            asyncio.run(self._cleanup_browser())
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['zh-CN', 'zh', 'en'],
+            });
+            
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+        """)
+        
+        return context, page
+
+    async def cleanup(self):
+        """清理browser资源"""
+        if self.browser:
+            try:
+                await self.browser.close()
+                print("DocumentProcessing Browser已关闭")
+            except Exception as e:
+                print(f"关闭DocumentProcessing browser时出错: {e}")
+        
+        if self.playwright:
+            try:
+                await self.playwright.stop()
+                print("DocumentProcessing Playwright已停止")
+            except Exception as e:
+                print(f"停止DocumentProcessing playwright时出错: {e}")
+        
+        self._is_initialized = False
+
+    async def __aenter__(self):
+        """异步上下文管理器入口"""
+        await self._initialize_browser()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """异步上下文管理器退出"""
+        await self.cleanup()
     
     @retry((requests.RequestException))
     def extract_document_content(self, document_path: List[str], query: str = None) -> Tuple[bool, str]:
@@ -156,7 +234,6 @@ class DocumentProcessingToolkit(BaseToolkit):
         Returns:
             Dict[str, Tuple[bool, str]]: Dictionary mapping URL to (success, content) tuple.
         """
-        import concurrent.futures
         
         async def _extract_single_url_async(url: str) -> Tuple[str, bool, str]:
             """Extract content from a single URL asynchronously."""
@@ -531,21 +608,37 @@ Query:
     @retry(RuntimeError, delay=60, backoff=2, max_delay=120)
     async def _extract_webpage_content(self, url: str) -> str:
         """Extract content from a webpage using Playwright."""
+        # 创建新的context和page
+        context, page = await self._create_context_and_page()
+        
         try:
             from playwright.async_api import TimeoutError
             
-            # Initialize browser if needed
-            await self._init_browser()
+            # 添加随机延迟，模拟人类行为
+            await asyncio.sleep(random.uniform(0.5, 2.0))
             
-            # Create a new page in the existing context
-            page = await self._browser_context.new_page()
+            # 添加额外的反检测脚本
+            await page.evaluate("""
+                delete navigator.__proto__.webdriver;
+                
+                Object.defineProperty(navigator, 'platform', {
+                    get: () => 'Win32'
+                });
+                
+                Object.defineProperty(screen, 'availHeight', {
+                    get: () => 728
+                });
+                Object.defineProperty(screen, 'availWidth', {
+                    get: () => 1366
+                });
+            """)
             
             try:
                 # Go to the URL and wait only for domcontentloaded
                 await page.goto(url, wait_until="domcontentloaded", timeout=15000)
                 
                 # Wait a short time for any critical dynamic content
-                await page.wait_for_timeout(1000)
+                await page.wait_for_timeout(random.randint(1000, 3000))
                 
                 # Extract text content
                 text_content = await page.evaluate("""() => {
@@ -559,10 +652,6 @@ Query:
                     return document.body.innerText;
                 }""")
             
-            finally:
-                # Close only the page, keep the browser running
-                await page.close()
-            
             if not text_content or len(text_content.strip()) == 0:
                 logger.debug("No content found using Playwright, falling back to html2text")
                 return await self._extract_webpage_content_with_html2text(url)
@@ -572,9 +661,15 @@ Query:
         except Exception as e:
             logger.error(f"Error extracting content with Playwright: {e}")
             logger.debug("Falling back to html2text")
-            # If there's a browser error, cleanup and retry with html2text
-            await self._cleanup_browser()
+            # If there's a browser error, fallback to html2text
             return await self._extract_webpage_content_with_html2text(url)
+        finally:
+            # 清理context
+            try:
+                await context.close()
+                print("DocumentProcessing Context已清理")
+            except Exception as e:
+                print(f"清理DocumentProcessing context时出错: {e}")
     
 
     def _download_file(self, url: str):
@@ -620,7 +715,6 @@ Query:
                 extracted_files.append(os.path.join(root, file))
         
         return extracted_files
-
 
     def get_tools(self) -> List[FunctionTool]:
         r"""Returns a list of FunctionTool objects representing the functions in the toolkit.
