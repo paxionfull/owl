@@ -447,7 +447,6 @@ Please output with the final answer according to the requirements without any ot
             Dict[str, Any]: Summary of benchmark results.
         """
         tasks = self._load_tasks(on, level, randomize, subset, idx)
-        
         self._results = []
         
         if save_result:

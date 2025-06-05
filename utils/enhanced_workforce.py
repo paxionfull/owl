@@ -123,7 +123,9 @@ Here are some additional tips for you:
 - You need to flexibly adjust the number of subtasks according to the steps of the overall task. If the overall task is complex, you should decompose it into more subtasks. Otherwise, you should decompose it into less subtasks (e.g. 2-3 subtasks).
 - There are some intermediate steps that cannot be answered in one step. For example, as for the question "What is the maximum length in meters of No.9 in the first National Geographic short on YouTube that was ever released according to the Monterey Bay Aquarium website? Just give the number.", It is impossible to directly find "No.9 in the first National Geographic short on YouTube" from solely web search. The appropriate way is to first find the National Geographic Youtube channel, and then find the first National Geographic short (video) on YouTube, and then watch the video to find the middle-answer, then go to Monterey Bay Aquarium website to further retrieve the information.
 - If the task mentions some sources (e.g. youtube, girls who code, nature, etc.), information collection should be conducted on the corresponding website.
+- If you ask question about a video, you don't need to identify the segment where the question is asked.
 """
+# - If you ask question about a video, you don't need to identify the segment where the question is asked, just ask the question directly.
 # You should add a subtask to verify the ultimate answer. The agents should try other ways to verify the answer, e.g. using different tools.
 
 OWL_WF_TASK_REPLAN_PROMPT = r"""You need to split the given task into 
@@ -180,7 +182,10 @@ Here are some additional tips for you:
 - Your decomposed subtasks should be clear and concrete, without any ambiguity.
 - There are some intermediate steps that cannot be answered in one step. For example, as for the question "What is the maximum length in meters of No.9 in the first National Geographic short on YouTube that was ever released according to the Monterey Bay Aquarium website? Just give the number.", It is impossible to directly find "No.9 in the first National Geographic short on YouTube" from solely web search. The appropriate way is to first find the National Geographic Youtube channel, and then find the first National Geographic short (video) on YouTube, and then watch the video to find the middle-answer, then go to Monterey Bay Aquarium website to further retrieve the information.
 - If the task mentions some sources (e.g. youtube, girls who code, nature, etc.), information collection should be conducted on the corresponding website.
+- If you ask question about a video, you don't need to identify the segment where the question is asked.
 """
+# - If you ask question about a video, you don't need to identify the segment where the question is asked, just ask the question directly.
+
 
 
 class OwlSingleAgentWorker(SingleAgentWorker):

@@ -28,6 +28,7 @@ class RoleType(Enum):
 
 class ModelType(UnifiedModelType, Enum):
     DEFAULT = os.getenv("DEFAULT_MODEL_TYPE", "gpt-4o-mini")
+    # DEFAULT = os.getenv("DEFAULT_MODEL_TYPE", "gpt-4o-2024-11-20")
 
     GPT_3_5_TURBO = "gpt-3.5-turbo"
     GPT_4 = "gpt-4"

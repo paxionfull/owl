@@ -172,7 +172,8 @@ class ChatAgent(BaseAgent):
                 if model is not None
                 else ModelFactory.create(
                     model_platform=ModelPlatformType.DEFAULT,
-                    model_type=ModelType.DEFAULT,
+                    # model_type=ModelType.DEFAULT,
+                    model_type="gpt-4o-2024-11-20",
                 )
             ),
             scheduling_strategy=scheduling_strategy,

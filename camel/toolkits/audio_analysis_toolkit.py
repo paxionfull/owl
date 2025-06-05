@@ -68,91 +68,56 @@ class AudioAnalysisToolkit(BaseToolkit):
             `{audio_path}` and question `{question}`."
         )
 
-        parsed_url = urlparse(audio_path)
-        is_url = all([parsed_url.scheme, parsed_url.netloc])
-        encoded_string = None
-
-        if is_url:
-            res = requests.get(audio_path)
-            res.raise_for_status()
-            audio_data = res.content
-            encoded_string = base64.b64encode(audio_data).decode('utf-8')
-        else:
-            with open(audio_path, "rb") as audio_file:
-                audio_data = audio_file.read()
-            audio_file.close()
-            encoded_string = base64.b64encode(audio_data).decode('utf-8')
-
-        file_suffix = os.path.splitext(audio_path)[1]
-        file_format = file_suffix[1:]
-
-        if self.audio_reasoning_model:
-            text_prompt = f"Transcribe all the content in the speech into text."
-            transcription = self.client.audio.transcriptions.create(
-                model="whisper-1",
-                file=open(audio_path, "rb")
-            )
-
-            transcript = transcription.text
-
-            reasoning_prompt = f"""
-            <speech_transcription_result>{transcript}</speech_transcription_result>
-
-            Please answer the following question based on the speech transcription result above:
-            <question>{question}</question>
-            """
-            
-            audio_reasoning_agent = ChatAgent(
-                "You are a helpful assistant that can answer questions about the given speech transcription.",
-                model=self.audio_reasoning_model
-                )
-            
-            reasoning_result = audio_reasoning_agent.step(reasoning_prompt)
-            response: str = str(reasoning_result.msg.content)
-            response += f"\n\nAudio duration: {duration} seconds"
-
-            logger.debug(f"Response: {response}")
-            return response
-
-
-        else:
-            text_prompt = f"""Answer the following question based on the given \
-            audio information:\n\n{question}"""
-
-            completion = self.client.chat.completions.create(
-                # model="gpt-4o-audio-preview",
-                model = "gpt-4o-mini-audio-preview",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful assistant specializing in \
-                        audio analysis.",
-                    },
-                    {  # type: ignore[list-item, misc]
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": text_prompt},
-                            {
-                                "type": "input_audio",
-                                "input_audio": {
-                                    "data": encoded_string,
-                                    "format": file_format,
-                                },
-                            },
-                        ],
-                    },
-                ],
-            )  # type: ignore[misc]
-            
-            # get the duration of the audio
-            duration = self.get_audio_duration(audio_path)
-
-            response: str = str(completion.choices[0].message.content)
-            response += f"\n\nAudio duration: {duration} seconds"
-
-            logger.debug(f"Response: {response}")
-            return response
+        # 从环境变量获取API URL，如果没有设置则使用默认值
+        api_url = os.environ.get("CHAT_URL", "http://59.110.169.144:7860/chat")
         
+        try:
+            # 检查音频文件是否存在
+            if not os.path.exists(audio_path):
+                raise FileNotFoundError(f"音频文件不存在: {audio_path}")
+            
+            # 准备文件参数
+            files = []
+            with open(audio_path, 'rb') as audio_file:
+                # 根据文件扩展名确定MIME类型
+                file_ext = os.path.splitext(audio_path)[1].lower()
+                if file_ext == '.wav':
+                    mime_type = 'audio/wav'
+                elif file_ext == '.mp3':
+                    mime_type = 'audio/mpeg'
+                elif file_ext == '.m4a':
+                    mime_type = 'audio/m4a'
+                elif file_ext == '.ogg':
+                    mime_type = 'audio/ogg'
+                else:
+                    mime_type = 'audio/wav'  # 默认类型
+                
+                files.append(('audio_file', (os.path.basename(audio_path), audio_file.read(), mime_type)))
+            
+            # 准备数据参数
+            data = {
+                "message": question,
+                "return_audio": False
+            }
+            
+            # 发送POST请求
+            response = requests.post(api_url, data=data, files=files)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result.get('text', '无法获取回答')
+            else:
+                error_msg = f"API调用失败: {response.status_code} - {response.text}"
+                logger.error(error_msg)
+                return error_msg
+                
+        except FileNotFoundError as e:
+            logger.error(f"文件错误: {e}")
+            return str(e)
+        except Exception as e:
+            logger.error(f"处理音频问答时出现错误: {e}")
+            return f"处理音频问答时出现错误: {e}"
+
 
     def get_tools(self) -> List[FunctionTool]:
         r"""Returns a list of FunctionTool objects representing the functions
