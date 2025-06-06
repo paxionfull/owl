@@ -238,6 +238,8 @@ class OwlSingleAgentWorker(SingleAgentWorker):
         #     return TaskState.FAILED
         result_dict = json.loads(response.msg.content)
         task_result = TaskResult(**result_dict)
+        # NOTE: 手动修改TaskResult中failed为False, 避免任务replan
+        task_result.failed = False
 
         color = Fore.RED if task_result.failed else Fore.GREEN
         print_text_animated(
