@@ -1,3 +1,6 @@
+import sys
+sys.path.append("D:\\work\\联想demo\\owl")
+
 from camel.toolkits import FunctionTool
 from camel.toolkits.base import BaseToolkit
 from camel.utils import MCPServer
@@ -78,8 +81,8 @@ class EmailToolkit(BaseToolkit):
 
         return json.dumps(meetings_list, ensure_ascii=False)
 
-    def filter_emails_by_recipient_and_date(self, recipient_email: str,start_date: str,end_date: str):
-        """过滤指定收件人，指定时间范围内的邮件
+    def get_emails_by_recipient_and_date(self, recipient_email: str,start_date: str,end_date: str):
+        """获取指定收件人，指定时间范围内的邮件内容
 
         Args:
             recipient_email (str): 收件人邮箱
@@ -137,8 +140,8 @@ class EmailToolkit(BaseToolkit):
                 })        
         return json.dumps(result_m, ensure_ascii=False)
 
-    def filter_recent_emails(self, start_date: str,end_date: str):
-        """过滤指定时间范围内的邮件
+    def get_emails_by_date(self, start_date: str, end_date: str):
+        """获取指定时间范围内的邮件内容
 
         Args:
             start_date (str): 开始日期, 格式为"YYYY-MM-DD"
@@ -180,7 +183,8 @@ class EmailToolkit(BaseToolkit):
                     "Sender": str(getattr(email, 'SenderName', '未知发件人')),
                     "To": str(getattr(email, 'To', '')),
                     "Days Ago": (datetime.datetime.now() - received_time).days,
-                    "Body Preview": (str(getattr(email, 'Body', ''))[:50] + "...") if getattr(email, 'Body', None) else "无正文"
+                    # "Body Preview": (str(getattr(email, 'Body', ''))[:50] + "...") if getattr(email, 'Body', None) else "无正文"
+                    "Body": (str(getattr(email, 'Body', ''))) if getattr(email, 'Body', None) else "无正文"
                 })
 
         return json.dumps(meetings_list, ensure_ascii=False)
@@ -255,15 +259,18 @@ class EmailToolkit(BaseToolkit):
                 representing the functions in the toolkit.
         """
         return [FunctionTool(self.get_meetings_on_specific_day),
-                FunctionTool(self.filter_emails_by_recipient_and_date),
-                FunctionTool(self.filter_recent_emails),
-                FunctionTool(self.get_outlook_attachments)]
+                FunctionTool(self.get_emails_by_date),
+                FunctionTool(self.get_emails_by_recipient_and_date),
+                # FunctionTool(self.get_outlook_attachments)
+                ]
 
 if __name__ == "__main__":
     email_toolkit = EmailToolkit()
     print(email_toolkit.get_tools())
 
-    print(email_toolkit.get_outlook_attachments("2025-05-22", "2025-5-27"))
+    # print(email_toolkit.get_outlook_attachments("2025-06-01", "2025-06-10"))
+    # print(email_toolkit.filter_recent_emails("2025-06-01", "2025-06-10"))
+    print(email_toolkit.get_meetings_on_specific_day("2025-06-01", "2025-06-10"))
 
     from IPython import embed
     embed()
