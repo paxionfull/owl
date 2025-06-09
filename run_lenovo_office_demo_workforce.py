@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+import sys
+import os
+import locale
+
+# 修复Windows控制台编码问题
+if sys.platform == "win32":
+    # 设置控制台编码为UTF-8
+    os.system("chcp 65001 > nul")
+    # 重新配置stdout和stderr
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+    # 设置locale
+    try:
+        locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL, 'Chinese_China.65001')
+        except:
+            pass
+
 from camel.toolkits import (
     VideoAnalysisToolkit,
     SearchToolkit,
@@ -19,7 +40,6 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-import os
 import json
 from typing import List, Dict, Any
 from loguru import logger
@@ -66,8 +86,9 @@ def construct_agent_list() -> List[Dict[str, Any]]:
 
 tips:
 - 如果是获取会议日程，请使用get_meetings_on_specific_day工具
+- 如果用户没有明确表明获取多少时间范围内的邮件，请获取最近一个星期的邮件
+- 如果是获取会议日程，请在结果中返回会议日程的详细信息
 - 如果是分析处理邮件内容，请先在结果中返回各邮件的详细信息：标题，发件人，收件人，发送时间，邮件内容。最后返回分析结论。
-- 如果无法通过邮件内容或者会议日程直接确定待办事项，请根据他们推测用户的工作性质
 """,
         model=email_agent_model,
         tools=[
@@ -92,9 +113,10 @@ tips:
 - 提取和分析Office文档内容
 
 注意：
-- 返回文档尽可能完整的内容，包含文件路径，标题，文件内容摘要
-- 判断文档可能与哪个任务相关，查看文档还有多少工作量，并给出完成文档的详细计划
-- 如果没有提供明确的工作计划，请跟根据文档内容和用户可能的工作性质，给出可能的工作计划
+- 返回文档尽可能完整的内容，包含文件绝对路径，标题，文件内容摘要
+- 判断文档可能与哪个代办事项相关，在工作计划中与该代办事项相关联，查看文档还有多少工作量，并给出完成文档的详细计划；如果文档内容与任务不相关，无需纳入工作计划
+- 如果用户没有提供明确的工作计划，请跟根据文档内容和用户可能的工作性质，给出可能的工作计划
+- 工作计划不要具体到某个时间点，而是粗略到上午下午这种粒度
 """,
         model=office_agent_model,
         tools=[
@@ -293,10 +315,53 @@ def run_demo_prompts():
     logger.success(f"Processing completed. Success: {result['success']}")
 
 
-def run_custom_prompt(prompt: str, file_paths: List[str] = None):
+def run_custom_prompt(prompt: str, file_paths: List[str] = None, with_guideline: bool = True):
     """运行单个自定义prompt的便捷函数"""
     
     logger.info(f"Processing custom prompt: {prompt[:100]}...")
+
+
+    prompt_template = """
+<task>
+{task_prompt}
+</task>
+<date>
+{date_prompt}
+</date>
+<guideline>
+{guideline_prompt}
+</guideline>
+<tips>
+{tips_prompt}
+</tips>
+
+请完成<task>中的任务，你需要：
+- 如果<guideline>有内容，按照<guideline>中的方式拆解<task>
+- 按照<task>和<tips>中提供的信息完成<task>
+"""
+
+    date_prompt = "今天是2025-06-08"
+    guideline_prompt = """- 查看我的邮件会议日程看看明天有什么会议
+- 查看我最近一个星期(截至今天)的邮件
+- 根据明天会议日程和邮件内容确定明天代办事项
+- 根据我电脑上已经打开的办公文档确定与明天代办相关的文档内容
+- 综合所有相关信息，给出明天的工作计划
+""" if with_guideline else ""
+    tips_prompt = """- 用尽可能少的步骤完成<task>
+- 制定工作计划时，要综合查看会议日程，邮件内容和电脑上打开的文档内容
+- 如果用户没有明确表明获取多少时间范围内的邮件，请获取最近一个星期的邮件
+- 制定工作计划时参考用户画像：用户喜欢上午准备开会相关的资料，下午学习新知识
+- 制定工作计划时，如果存在需要查看相关文档，请一定要给出相关文档的绝对路径，并说明为什么需要这些文档
+- 明天的会议日程信息必须包含在工作计划中（具体到时间点）；其余工作计划不要具体到某个时间点，而是粗略到上午下午这种粒度
+- 最终工作计划使用markdown格式输出
+- 回答使用中文
+"""
+    prompt = prompt_template.format(
+        date_prompt=date_prompt,
+        task_prompt=prompt,
+        guideline_prompt=guideline_prompt,
+        tips_prompt=tips_prompt
+    )
     
     if os.path.exists(f"tmp/"):
         shutil.rmtree(f"tmp/")
@@ -320,6 +385,22 @@ def run_custom_prompt(prompt: str, file_paths: List[str] = None):
 
 
 if __name__ == "__main__":
+    # 配置日志输出到文件
+    import datetime
+    log_filename = f"run_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    
+    # 配置loguru同时输出到控制台和文件
+    logger.add(
+        log_filename,
+        rotation="10 MB",
+        retention="7 days",
+        level="INFO",
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+        encoding="utf-8"
+    )
+    
+    print(f"日志将同时输出到控制台和文件: {log_filename}")
+    
     # 可以选择运行演示prompts或单个自定义prompt
     
     # 选项1: 运行预定义的演示prompts
@@ -328,6 +409,9 @@ if __name__ == "__main__":
     # 选项2: 运行单个自定义prompt (取消注释以使用)
     custom_response = run_custom_prompt(
         # "查看我电脑上打开的办公文档，并总结我的工作内容, 进而给出第二天详细的工作计划, 用中文回答"
-        "今天是2025-06-09，查看我的邮件会议日程看看明天有什么会议， 同时查看我最近一个月(截至今天)的邮件，根据我电脑上已经打开的办公文档帮我确定明天的工作计划. 用尽可能少的步骤实现，用中文回答"
-        # "今天是2025-06-09，为我规划一下明日的工作计划. 用尽可能少的步骤实现，用中文回答"
+        # "今天是2025-06-08，查看我的邮件会议日程看看明天有什么会议， 同时查看我最近一个月(截至今天)的邮件，根据我电脑上已经打开的办公文档帮我确定明天的工作计划. 用尽可能少的步骤实现，用中文回答"
+        # "今天是2025-06-08\n为我规划一下明日的工作计划\n用中文回答"
+        "为我规划一下明日的工作计划",
+        with_guideline=False
+        # with_guideline=True
     )
