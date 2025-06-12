@@ -52,7 +52,8 @@ You can modify `test_idx` variable to specify the test case.
 - gpt-4o: 26/53
 - qwen3-4b: 21/53
 - qwen2.5-3b-instruct: 17/53
-- qwen2.5-3b-instruct(合成数据训练后): 23/53
+- qwen2.5-3b-instruct(合成数据训练后,zyq): 23/53
+- qwen2.5-3b-instruct(合成数据训练后,zyx): 23/53
 
 
 ## 使用vllm测试本地模型
