@@ -223,7 +223,8 @@ def construct_workforce() -> OwlGaiaWorkforce:
             # model_type="/mnt/public/algm/models/Qwen3-4B",
             model_type="/mnt/public/algm/zhuangyueqing/public_logs/qwen_sft/Qwen2.5-3B-Instruct__question_v1_1000_decompose_train_jsonl/final",
             model_config_dict=model_config_dict,
-            url="http://59.110.169.144:39929/v1",
+            # url="http://59.110.169.144:39929/v1",
+            url="http://127.0.0.1:39929/v1",
         )
     }
     answerer_agent_kwargs = {
@@ -345,8 +346,8 @@ def evaluate_on_gaia():
     # ] 
     test_idx = [0, 2, 3, 5, 7, 9, 10, 13, 14, 16, 18, 21, 22, 25, 28, 29, 30, 31, 36, 38, 39, 42, 43, 46, 48, 50]
 
-    test_idx = [15]  # browser use
     test_idx = list(range(53))
+    test_idx = [15]  # browser use
 
 
     # wrong cases
