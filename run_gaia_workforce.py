@@ -32,50 +32,70 @@ from examples.overwrite_modules.browser_user_toolkit import BrowserUseToolkit
 
 LLM_MODEL = "gpt-4o-2024-11-20"
 REASONING_MODEL = "gpt-4o-2024-11-20"
+# LLM_MODEL = "qwen2.5-7b-instruct"
+# REASONING_MODEL = "qwen2.5-7b-instruct"
+# LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B"
+# REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B"
+# LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-4B-Instruct"
+# REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-4B-Instruct"
 
+
+# model_config_dict = {"temperature": 0, "chat_template_kwargs": {"enable_thinking": False}}
+model_config_dict = {"temperature": 0}
+model_platform = ModelPlatformType.OPENAI
+# model_platform = ModelPlatformType.VLLM
+# url = "http://59.110.169.144:7860/v1"
+url = None
 
 def construct_agent_list() -> List[Dict[str, Any]]:
 
     web_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=LLM_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
     document_processing_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=LLM_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
     reasoning_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=REASONING_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
     image_analysis_model = ModelFactory.create( 
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=LLM_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
     audio_reasoning_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=REASONING_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
     web_agent_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=LLM_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
     planning_agent_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
+        model_platform=model_platform,
         model_type=REASONING_MODEL,
-        model_config_dict={"temperature": 0},
+        model_config_dict=model_config_dict,
+        url=url,
     )
     
 
@@ -124,7 +144,7 @@ Here are some tips that help you perform web search:
             FunctionTool(search_toolkit.search_archived_webpage),
             FunctionTool(document_processing_toolkit.extract_document_content),
             # FunctionTool(browser_simulator_toolkit.browse_url),
-            FunctionTool(browser_user_toolkit.browse_url),
+            # FunctionTool(browser_user_toolkit.browse_url),
             FunctionTool(video_analysis_toolkit.ask_question_about_video),
         ]
     )
@@ -181,25 +201,37 @@ def construct_workforce() -> OwlGaiaWorkforce:
     
     coordinator_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.OPENAI,
+            model_platform=model_platform,
             model_type=REASONING_MODEL,
-            model_config_dict={"temperature": 0},
+            model_config_dict=model_config_dict,
+            url=url,
         )
     }
     
+    # task_agent_kwargs = {
+    #     "model": ModelFactory.create(
+    #         model_platform=model_platform,
+    #         model_type=LLM_MODEL,
+    #         model_config_dict=model_config_dict,
+    #         url=url,
+    #     )
+    # }
     task_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.OPENAI,
-            model_type=LLM_MODEL,
-            model_config_dict={"temperature": 0},
+            model_platform=ModelPlatformType.VLLM,
+            # model_type="/mnt/public/algm/models/Qwen2.5-3B-Instruct",
+            # model_type="/mnt/public/algm/models/Qwen3-4B",
+            model_type="/mnt/public/algm/zhuangyueqing/public_logs/qwen_sft/Qwen2.5-3B-Instruct__question_v1_1000_decompose_train_jsonl/final",
+            model_config_dict=model_config_dict,
+            url="http://59.110.169.144:39929/v1",
         )
     }
-    
     answerer_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.OPENAI,
+            model_platform=model_platform,
             model_type=LLM_MODEL,
-            model_config_dict={"temperature": 0},
+            model_config_dict=model_config_dict,
+            url=url,
         )
     }
     
@@ -281,7 +313,7 @@ def evaluate_on_gaia():
     MAX_TRIES = 1
     # PARALLEL = False  # 新增：是否启用并行处理
     PARALLEL = True  # 新增：是否启用并行处理
-    MAX_WORKERS = 5  # 新增：最大并行线程数
+    MAX_WORKERS = 10  # 新增：最大并行线程数
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
     # test_idx = [16]
@@ -311,9 +343,9 @@ def evaluate_on_gaia():
     #     # 26,
     #     # 33,
     # ] 
-    test_idx = [15]  # browser use
     test_idx = [0, 2, 3, 5, 7, 9, 10, 13, 14, 16, 18, 21, 22, 25, 28, 29, 30, 31, 36, 38, 39, 42, 43, 46, 48, 50]
 
+    test_idx = [15]  # browser use
     test_idx = list(range(53))
 
 

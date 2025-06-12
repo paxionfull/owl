@@ -72,6 +72,8 @@ class VLLMModel(OpenAICompatibleModel):
             token_counter=token_counter,
             timeout=timeout,
         )
+        if not self._url.startswith("http://localhost"):
+            self._url = url
         if not self._url:
             self._start_server()
 
