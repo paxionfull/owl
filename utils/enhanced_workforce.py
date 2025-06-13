@@ -538,7 +538,7 @@ class OwlGaiaWorkforce(OwlWorkforce):
         self.overall_task_solve_trajectory.append(overall_history)
 
 
-    def get_workforce_final_answer(self, task: Task) -> str:
+    def get_workforce_final_answer(self, task: Task, prompt: str = None) -> str:
         r"""Get the final short answer from the workforce."""
         
         self.answerer_agent.reset()
@@ -548,10 +548,11 @@ class OwlGaiaWorkforce(OwlWorkforce):
             subtask_info += f"Subtask {subtask.id}: {subtask.content}\n"
             subtask_info += f"Subtask {subtask.id} result: {subtask.result}\n\n"           
 
-        prompt = f"""
+
+        prompt = """
 I am solving a question:
 <question>
-{task.content}
+{question}
 </question>
 
 Now, I have solved the question by decomposing it into several subtasks, the subtask information is as follows:
@@ -570,7 +571,11 @@ If you are asked for a comma separated list, apply the above rules depending of 
 </requirements>
 
 Please output with the final answer according to the requirements without any other text. If the primary answer is already a final answer with the correct format, just output the primary answer.
-    """    
+    """ if prompt is None else prompt
+        prompt = prompt.format(
+            question=task.content,
+            subtask_info=subtask_info,
+        )
         
         resp = self.answerer_agent.step(prompt)
         self.answerer_agent_history.append(

@@ -25,6 +25,8 @@ from typing import List, Dict, Any
 from loguru import logger
 from utils import OwlWorkforceChatAgent, OwlGaiaWorkforce
 from utils.gaia import GAIABenchmark
+from utils.mint import MINTBenchmark
+from utils.hotpotqa import HotpotQABenchmark
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
@@ -208,26 +210,27 @@ def construct_workforce() -> OwlGaiaWorkforce:
         )
     }
     
-    # task_agent_kwargs = {
-    #     "model": ModelFactory.create(
-    #         model_platform=model_platform,
-    #         model_type=LLM_MODEL,
-    #         model_config_dict=model_config_dict,
-    #         url=url,
-    #     )
-    # }
     task_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.VLLM,
-            # model_type="/mnt/public/algm/models/Qwen2.5-3B-Instruct",
-            # model_type="/mnt/public/algm/models/Qwen3-4B",
-            # model_type="/mnt/public/algm/zhuangyueqing/public_logs/qwen_sft/Qwen2.5-3B-Instruct__question_v1_1000_decompose_train_jsonl/final",
-            model_type="/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct_question_v1_hermes_data",
+            model_platform=model_platform,
+            model_type=LLM_MODEL,
             model_config_dict=model_config_dict,
-            # url="http://59.110.169.144:39929/v1",
-            url="http://127.0.0.1:39929/v1",
+            url=url,
         )
     }
+    # task_agent_kwargs = {
+    #     "model": ModelFactory.create(
+    #         model_platform=ModelPlatformType.VLLM,
+    #         # model_type="/mnt/public/algm/models/Qwen2.5-3B-Instruct",
+    #         # model_type="/mnt/public/algm/models/Qwen3-4B",
+    #         # model_type="/mnt/public/algm/zhuangyueqing/public_logs/qwen_sft/Qwen2.5-3B-Instruct__question_v1_1000_decompose_train_jsonl/final",
+    #         # model_type="/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct_question_v1_hermes_data",
+    #         model_type="/mnt/public/algm/yzy/models/qwen3-4b-question_v1_hermes",
+    #         model_config_dict=model_config_dict,
+    #         # url="http://59.110.169.144:39929/v1",
+    #         url="http://127.0.0.1:39929/v1",
+    #     )
+    # }
     answerer_agent_kwargs = {
         "model": ModelFactory.create(
             model_platform=model_platform,
@@ -255,7 +258,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
     return workforce
 
 
-def process_single_task_index(
+def process_single_task_index_gaia(
     task_idx: int,
     level: int,
     on: str,
@@ -306,6 +309,100 @@ def process_single_task_index(
         }
 
 
+def process_single_task_index_mint(
+    task_idx: int,
+    save_result: bool,
+    max_tries: int,
+    max_replanning_tries: int,
+    data_dir: str,
+    result_path: str,
+    thread_id: int
+) -> Dict[str, Any]:
+    """处理单个MINT任务索引，用于并行执行"""
+    
+    # 为每个线程创建独立的workforce和benchmark
+    workforce = construct_workforce()
+    
+    benchmark = MINTBenchmark(
+        data_dir=data_dir,
+        save_to=f"{result_path}_thread_{thread_id}.json",
+    )
+    
+    logger.info(f"Thread {thread_id}: Processing MINT task index {task_idx}")
+    
+    try:
+        result = benchmark.run_workforce_with_retry(
+            workforce,
+            idx=[task_idx],  # 只处理单个任务
+            save_result=save_result,
+            max_tries=max_tries,
+            max_replanning_tries=max_replanning_tries,
+        )
+            
+        return {
+            'task_idx': task_idx,
+            'thread_id': thread_id,
+            'result': result,
+            'success': True
+        }
+        
+    except Exception as e:
+        logger.error(f"Thread {thread_id}: Error processing MINT task {task_idx}: {e}")
+        return {
+            'task_idx': task_idx,
+            'thread_id': thread_id,
+            'error': str(e),
+            'success': False
+        }
+
+
+def process_single_task_index_hotpotqa(
+    task_idx: int,
+    save_result: bool,
+    max_tries: int,
+    max_replanning_tries: int,
+    data_dir: str,
+    result_path: str,
+    thread_id: int
+) -> Dict[str, Any]:
+    """处理单个HotpotQA任务索引，用于并行执行"""
+    
+    # 为每个线程创建独立的workforce和benchmark
+    workforce = construct_workforce()
+    
+    benchmark = HotpotQABenchmark(
+        data_dir=data_dir,
+        save_to=f"{result_path}_thread_{thread_id}.json",
+    )
+    
+    logger.info(f"Thread {thread_id}: Processing HotpotQA task index {task_idx}")
+    
+    try:
+        result = benchmark.run_workforce_with_retry(
+            workforce,
+            idx=[task_idx],  # 只处理单个任务
+            save_result=save_result,
+            max_tries=max_tries,
+            max_replanning_tries=max_replanning_tries,
+        )
+            
+        return {
+            'task_idx': task_idx,
+            'thread_id': thread_id,
+            'result': result,
+            'success': True
+        }
+        
+    except Exception as e:
+        logger.error(f"Thread {thread_id}: Error processing HotpotQA task {task_idx}: {e}")
+        return {
+            'task_idx': task_idx,
+            'thread_id': thread_id,
+            'error': str(e),
+            'success': False
+        }
+
+
 def evaluate_on_gaia():
     
     LEVEL = 1
@@ -313,7 +410,7 @@ def evaluate_on_gaia():
     SAVE_RESULT = True
     # MAX_TRIES = 3
     MAX_TRIES = 1
-    # PARALLEL = False  # 新增：是否启用并行处理
+    PARALLEL = False  # 新增：是否启用并行处理
     PARALLEL = True  # 新增：是否启用并行处理
     MAX_WORKERS = 10  # 新增：最大并行线程数
     
@@ -347,9 +444,20 @@ def evaluate_on_gaia():
     # ] 
     test_idx = [0, 2, 3, 5, 7, 9, 10, 13, 14, 16, 18, 21, 22, 25, 28, 29, 30, 31, 36, 38, 39, 42, 43, 46, 48, 50]
 
-    test_idx = list(range(53))
     test_idx = [15]  # browser use
+    # test_idx = list(range(53))  # gaia level1
+    # test_idx = list(range(43))  # mint hotpotqa
 
+    TASK = "gaia"
+    TASK = "mint"
+    TASK = "hotpotqa"
+    if TASK == "gaia":
+        test_idx = list(range(53))
+    elif TASK == "mint":
+        test_idx = list(range(43))
+    elif TASK == "hotpotqa":
+        # test_idx = list(range(20))
+        test_idx = list(range(20, 300))
 
     # wrong cases
 
@@ -371,18 +479,42 @@ def evaluate_on_gaia():
             # 提交所有任务
             future_to_task = {}
             for i, task_idx in enumerate(test_idx):
-                future = executor.submit(
-                    process_single_task_index,
-                    task_idx=task_idx,
-                    level=LEVEL,
-                    on=on,
-                    save_result=SAVE_RESULT,
-                    max_tries=MAX_TRIES,
-                    max_replanning_tries=2,
-                    data_dir="data/gaia",
-                    result_path=SAVE_RESULT_PATH.replace('.json', ''),
-                    thread_id=task_idx  # 使用任务索引而不是线程序号
-                )
+                if TASK == "gaia":
+                    future = executor.submit(
+                        process_single_task_index_gaia,
+                        task_idx=task_idx,
+                        level=LEVEL,
+                        on=on,
+                        save_result=SAVE_RESULT,
+                        max_tries=MAX_TRIES,
+                        max_replanning_tries=2,
+                        data_dir="data/gaia",
+                        result_path=SAVE_RESULT_PATH.replace('.json', ''),
+                        thread_id=task_idx  # 使用任务索引而不是线程序号
+                    )
+                elif TASK == "mint":
+                    future = executor.submit(
+                        process_single_task_index_mint,
+                        task_idx=task_idx,
+                        save_result=SAVE_RESULT,
+                        max_tries=MAX_TRIES,
+                        max_replanning_tries=2,
+                        data_dir="data/xingyaoww-mint-bench/hotpotqa",
+                        result_path=SAVE_RESULT_PATH.replace('.json', ''),
+                        thread_id=task_idx  # 使用任务索引而不是线程序号
+                    )
+                elif TASK == "hotpotqa":
+                    future = executor.submit(
+                        process_single_task_index_hotpotqa,
+                        task_idx=task_idx,
+                        save_result=SAVE_RESULT,
+                        max_tries=MAX_TRIES,
+                        max_replanning_tries=2,
+                        data_dir="data/hotpotqa",
+                        result_path=SAVE_RESULT_PATH.replace('.json', ''),
+                        thread_id=task_idx  # 使用任务索引而不是线程序号
+                    )
+
                 future_to_task[future] = task_idx
             
             # 收集结果
@@ -428,17 +560,27 @@ def evaluate_on_gaia():
         # 原始顺序处理模式
         logger.info("Using sequential processing")
         
-        benchmark = GAIABenchmark(
-            data_dir="data/gaia",
-            save_to=SAVE_RESULT_PATH,
-        )
-        
+        if TASK == "gaia":
+            benchmark = GAIABenchmark(
+                data_dir="data/gaia",
+                save_to=SAVE_RESULT_PATH,
+            )
+            
+        elif TASK == "mint":
+            benchmark = MINTBenchmark(
+                data_dir="data/xingyaoww-mint-bench/hotpotqa",
+                save_to=SAVE_RESULT_PATH,
+            )
+        elif TASK == "hotpotqa":
+            benchmark = HotpotQABenchmark(
+                data_dir="data/hotpotqa",
+                save_to=SAVE_RESULT_PATH,
+            )
+
         workforce = construct_workforce()
 
         result = benchmark.run_workforce_with_retry(
             workforce,
-            on=on,
-            level=LEVEL,
             idx=test_idx,
             save_result=SAVE_RESULT,
             max_tries=MAX_TRIES,
