@@ -479,13 +479,14 @@ Please try other ways to get the information.
             response = await self._aget_model_response(
                 openai_messages,
                 num_tokens,
-                response_format,
+                # response_format,
+                None,
                 self._get_full_tool_schemas(),
             )
 
             if self.single_iteration:
                 break
-
+            print(response.response.choices[0].message.content)
             if tool_call_requests := response.tool_call_requests:
                 # Process all tool calls
                 print(f"tool_call_requests: {tool_call_requests}")

@@ -40,64 +40,118 @@ REASONING_MODEL = "gpt-4o-2024-11-20"
 # REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B"
 # LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-4B-Instruct"
 # REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-4B-Instruct"
+# LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_0_to_300"
+# REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_0_to_300"
+# LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_0_to_600"
+# REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_0_to_600"
+# LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_600_10e"
+# REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_600_10e"
+# LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_5e"
+# REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_5e"
+# LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
+# REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
 
 
-# model_config_dict = {"temperature": 0, "chat_template_kwargs": {"enable_thinking": False}}
-model_config_dict = {"temperature": 0}
-model_platform = ModelPlatformType.OPENAI
+WORKER_LLM_MODEL = "gpt-4o-2024-11-20"
+WORKER_REASONING_MODEL = "gpt-4o-2024-11-20"
+worker_model_platform = ModelPlatformType.OPENAI
+worker_url = None
+# WORKER_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_10e"
+# WORKER_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_10e"
+# WORKER_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
+# WORKER_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
+WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
+WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
+# WORKER_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
+# WORKER_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
+# WORKER_LLM_MODEL = "qwen3-32b"
+# WORKER_REASONING_MODEL = "qwen3-32b"
+worker_model_platform = ModelPlatformType.VLLM
+worker_url = "http://127.0.0.1:39929/v1"
+# worker_model_platform = ModelPlatformType.OPENAI
+# worker_url = None
+
+
+# PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct__21_300_train_jsonl__1-1200__question_v1_1000_decompose_train__8k"
+# PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct__21_300_train_jsonl__1-1200__question_v1_1000_decompose_train__8k"
+# PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_10e"
+# PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_10e"
+# PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
+# PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
+PIPELINE_LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
+PIPELINE_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
+# PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
+# PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
+# PIPELINE_LLM_MODEL = "qwen3-32b"
+# PIPELINE_REASONING_MODEL = "qwen3-32b"
+pipeline_model_platform = ModelPlatformType.VLLM
+pipeline_url = "http://127.0.0.1:39929/v1"
+# pipeline_model_platform = ModelPlatformType.OPENAI
+# pipeline_url = None
+
+
+# model_config_dict = {"temperature": 0}
+model_config_dict = {"temperature": 0, "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}
+# model_platform = ModelPlatformType.OPENAI
 # model_platform = ModelPlatformType.VLLM
-# url = "http://59.110.169.144:7860/v1"
-url = None
+# url = None
+# # url = "http://59.110.169.144:39929/v1"
+# url = "http://127.0.0.1:39929/v1"
+
 
 def construct_agent_list() -> List[Dict[str, Any]]:
 
     web_model = ModelFactory.create(
-        model_platform=model_platform,
-        model_type=LLM_MODEL,
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
         model_config_dict=model_config_dict,
-        url=url,
+        url=worker_url,
     )
     
     document_processing_model = ModelFactory.create(
-        model_platform=model_platform,
-        model_type=LLM_MODEL,
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
         model_config_dict=model_config_dict,
-        url=url,
+        url=worker_url,
     )
     
     reasoning_model = ModelFactory.create(
-        model_platform=model_platform,
-        model_type=REASONING_MODEL,
+        model_platform=worker_model_platform,
+        model_type=WORKER_REASONING_MODEL,
         model_config_dict=model_config_dict,
-        url=url,
+        url=worker_url,
     )
     
     image_analysis_model = ModelFactory.create( 
-        model_platform=model_platform,
-        model_type=LLM_MODEL,
+        # model_platform=worker_model_platform,
+        # model_type=WORKER_LLM_MODEL,
+        # model_config_dict=model_config_dict,
+        # url=worker_url,
+        model_platform=ModelPlatformType.OPENAI,
+        model_type="gpt-4o-2024-11-20",
         model_config_dict=model_config_dict,
-        url=url,
+        url=None,
     )
     
     audio_reasoning_model = ModelFactory.create(
-        model_platform=model_platform,
-        model_type=REASONING_MODEL,
+        model_platform=worker_model_platform,
+        model_type=WORKER_REASONING_MODEL,
         model_config_dict=model_config_dict,
-        url=url,
+        url=worker_url,
     )
     
     web_agent_model = ModelFactory.create(
-        model_platform=model_platform,
-        model_type=LLM_MODEL,
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
         model_config_dict=model_config_dict,
-        url=url,
+        url=worker_url,
     )
     
     planning_agent_model = ModelFactory.create(
-        model_platform=model_platform,
-        model_type=REASONING_MODEL,
+        model_platform=worker_model_platform,
+        model_type=WORKER_REASONING_MODEL,
         model_config_dict=model_config_dict,
-        url=url,
+        url=worker_url,
     )
     
 
@@ -108,7 +162,7 @@ def construct_agent_list() -> List[Dict[str, Any]]:
     # audio_analysis_toolkit = AudioAnalysisToolkit(cache_dir="tmp/audio", audio_reasoning_model=audio_reasoning_model)
     audio_analysis_toolkit = AudioAnalysisToolkit(cache_dir="tmp/audio", audio_reasoning_model=None)
     code_runner_toolkit = CodeExecutionToolkit(sandbox="subprocess", verbose=True)
-    browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
+    # browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
     excel_toolkit = ExcelToolkit()
     browser_user_toolkit = BrowserUseToolkit(headless=True)
 
@@ -203,19 +257,19 @@ def construct_workforce() -> OwlGaiaWorkforce:
     
     coordinator_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=model_platform,
-            model_type=REASONING_MODEL,
+            model_platform=pipeline_model_platform,
+            model_type=PIPELINE_REASONING_MODEL,
             model_config_dict=model_config_dict,
-            url=url,
+            url=pipeline_url,
         )
     }
     
     task_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=model_platform,
-            model_type=LLM_MODEL,
+            model_platform=pipeline_model_platform,
+            model_type=PIPELINE_LLM_MODEL,
             model_config_dict=model_config_dict,
-            url=url,
+            url=pipeline_url,
         )
     }
     # task_agent_kwargs = {
@@ -225,7 +279,10 @@ def construct_workforce() -> OwlGaiaWorkforce:
     #         # model_type="/mnt/public/algm/models/Qwen3-4B",
     #         # model_type="/mnt/public/algm/zhuangyueqing/public_logs/qwen_sft/Qwen2.5-3B-Instruct__question_v1_1000_decompose_train_jsonl/final",
     #         # model_type="/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct_question_v1_hermes_data",
-    #         model_type="/mnt/public/algm/yzy/models/qwen3-4b-question_v1_hermes",
+    #         # model_type="/mnt/public/algm/yzy/models/qwen3-4b-question_v1_hermes",
+    #         # model_type="/mnt/public/algm/yzy/models/qwen3-4b-chat-sft-1106",
+    #         # model_type="/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_0_to_300",
+    #         model_type="/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_0_to_300",
     #         model_config_dict=model_config_dict,
     #         # url="http://59.110.169.144:39929/v1",
     #         url="http://127.0.0.1:39929/v1",
@@ -233,10 +290,10 @@ def construct_workforce() -> OwlGaiaWorkforce:
     # }
     answerer_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=model_platform,
-            model_type=LLM_MODEL,
+            model_platform=pipeline_model_platform,
+            model_type=PIPELINE_LLM_MODEL,
             model_config_dict=model_config_dict,
-            url=url,
+            url=pipeline_url,
         )
     }
     
@@ -403,6 +460,56 @@ def process_single_task_index_hotpotqa(
         }
 
 
+def check_completed_tasks(result_path: str, task_indices: List[int]) -> List[int]:
+    """检查已完成的任务并返回需要处理的任务列表"""
+    completed_task_indices = set()
+    
+    # 检查主结果文件
+    if os.path.exists(result_path):
+        try:
+            with open(result_path, 'r', encoding='utf-8') as f:
+                main_result = json.load(f)
+                if 'results' in main_result:
+                    for result in main_result['results']:
+                        # 从结果文件中提取task_id对应的实际任务索引
+                        # 这里需要根据实际的数据源来确定索引
+                        # 由于task_id是UUID，我们需要检查线程文件来确定对应的索引
+                        pass
+        except Exception as e:
+            logger.warning(f"Error reading main result file: {e}")
+    
+    # 检查线程特定的结果文件，这些文件的命名包含了任务索引
+    base_path = result_path.replace('.json', '')
+    for task_idx in task_indices:
+        thread_file = f"{base_path}_thread_{task_idx}.json"
+        if os.path.exists(thread_file):
+            try:
+                with open(thread_file, 'r', encoding='utf-8') as f:
+                    thread_result = json.load(f)
+                    # 检查是否有有效的结果
+                    if isinstance(thread_result, list) and len(thread_result) > 0:
+                        # 如果文件存在且包含有效结果，认为该任务已完成
+                        completed_task_indices.add(task_idx)
+                        logger.debug(f"Found completed task file: {thread_file}")
+                    elif isinstance(thread_result, dict) and 'results' in thread_result and len(thread_result['results']) > 0:
+                        # 如果是字典格式且包含结果，也认为已完成
+                        completed_task_indices.add(task_idx)
+                        logger.debug(f"Found completed task file: {thread_file}")
+            except Exception as e:
+                logger.warning(f"Error reading thread result file {thread_file}: {e}")
+    
+    # 返回未完成的任务列表
+    remaining_tasks = [idx for idx in task_indices if idx not in completed_task_indices]
+    
+    if completed_task_indices:
+        logger.info(f"Found {len(completed_task_indices)} completed tasks with indices: {sorted(completed_task_indices)}")
+        logger.info(f"Remaining {len(remaining_tasks)} tasks to process: {sorted(remaining_tasks)}")
+    else:
+        logger.info(f"No completed tasks found, will process all {len(remaining_tasks)} tasks")
+    
+    return remaining_tasks
+
+
 def evaluate_on_gaia():
     
     LEVEL = 1
@@ -412,6 +519,7 @@ def evaluate_on_gaia():
     MAX_TRIES = 1
     PARALLEL = False  # 新增：是否启用并行处理
     PARALLEL = True  # 新增：是否启用并行处理
+    # MAX_WORKERS = 10  # 新增：最大并行线程数
     MAX_WORKERS = 10  # 新增：最大并行线程数
     
     SAVE_RESULT_PATH = f"results/workforce/workforce_{LEVEL}_pass{MAX_TRIES}_gpt4o.json"
@@ -448,16 +556,19 @@ def evaluate_on_gaia():
     # test_idx = list(range(53))  # gaia level1
     # test_idx = list(range(43))  # mint hotpotqa
 
-    TASK = "gaia"
     TASK = "mint"
     TASK = "hotpotqa"
+    TASK = "gaia"
     if TASK == "gaia":
+        test_idx = [16]
         test_idx = list(range(53))
     elif TASK == "mint":
         test_idx = list(range(43))
     elif TASK == "hotpotqa":
         # test_idx = list(range(20))
-        test_idx = list(range(20, 300))
+        # test_idx = list(range(20, 300))
+        # test_idx = list(range(300, 600))
+        test_idx = list(range(1440, 3000))
 
     # wrong cases
 
@@ -465,8 +576,15 @@ def evaluate_on_gaia():
         shutil.rmtree(f"tmp/")
     
     if PARALLEL and len(test_idx) > 1:
+        # 检查已完成的任务，过滤出需要处理的任务
+        remaining_tasks = check_completed_tasks(SAVE_RESULT_PATH, test_idx)
+        
+        if not remaining_tasks:
+            logger.info("All tasks have been completed, no need to process")
+            return
+        
         # 并行处理模式
-        logger.info(f"Using parallel processing with {MAX_WORKERS} workers for {len(test_idx)} tasks")
+        logger.info(f"Using parallel processing with {MAX_WORKERS} workers for {len(remaining_tasks)} remaining tasks (originally {len(test_idx)} tasks)")
         
         # 确保结果目录存在
         os.makedirs(os.path.dirname(SAVE_RESULT_PATH), exist_ok=True)
@@ -478,7 +596,7 @@ def evaluate_on_gaia():
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             # 提交所有任务
             future_to_task = {}
-            for i, task_idx in enumerate(test_idx):
+            for i, task_idx in enumerate(remaining_tasks):
                 if TASK == "gaia":
                     future = executor.submit(
                         process_single_task_index_gaia,
@@ -537,24 +655,58 @@ def evaluate_on_gaia():
         
         # 保存合并后的结果
         if SAVE_RESULT:
+            # 如果已有结果文件，先加载现有结果
+            existing_results = []
+            existing_correct = 0
+            existing_total = 0
+            
+            if os.path.exists(SAVE_RESULT_PATH):
+                try:
+                    with open(SAVE_RESULT_PATH, 'r', encoding='utf-8') as f:
+                        existing_data = json.load(f)
+                        existing_results = existing_data.get('results', [])
+                        existing_correct = existing_data.get('correct', 0)
+                        existing_total = existing_data.get('total', 0)
+                except Exception as e:
+                    logger.warning(f"Error reading existing results: {e}")
+            
+            # 合并现有结果和新结果
+            combined_results = existing_results + all_results
+            combined_correct = existing_correct + total_correct
+            combined_total = existing_total + total_tasks
+            
             final_result = {
-                "total": total_tasks,
-                "correct": total_correct,
-                "accuracy": total_correct / total_tasks if total_tasks > 0 else 0,
-                "results": all_results
+                "total": combined_total,
+                "correct": combined_correct,
+                "accuracy": combined_correct / combined_total if combined_total > 0 else 0,
+                "results": combined_results
             }
             
             with open(SAVE_RESULT_PATH, 'w', encoding='utf-8') as f:
                 json.dump(final_result, f, indent=2, ensure_ascii=False)
             
             # 清理线程特定的结果文件
-            for i in range(len(test_idx)):
-                thread_file = f"{SAVE_RESULT_PATH.replace('.json', '')}_thread_{i}.json"
+            for task_idx in remaining_tasks:
+                thread_file = f"{SAVE_RESULT_PATH.replace('.json', '')}_thread_{task_idx}.json"
                 if os.path.exists(thread_file):
                     os.remove(thread_file)
         
-        logger.success(f"Parallel processing completed. Correct: {total_correct}, Total: {total_tasks}")
-        logger.success(f"Accuracy: {total_correct / total_tasks if total_tasks > 0 else 0}")
+        # 获取合并后的统计用于日志输出
+        if SAVE_RESULT and os.path.exists(SAVE_RESULT_PATH):
+            try:
+                with open(SAVE_RESULT_PATH, 'r', encoding='utf-8') as f:
+                    final_data = json.load(f)
+                    final_correct = final_data.get('correct', total_correct)
+                    final_total = final_data.get('total', total_tasks)
+                    logger.success(f"Parallel processing completed. New: {total_correct}/{total_tasks}, Combined: {final_correct}/{final_total}")
+                    logger.success(f"Combined Accuracy: {final_correct / final_total if final_total > 0 else 0}")
+            except Exception as e:
+                logger.warning(f"Error reading final results for logging: {e}")
+                logger.success(f"Parallel processing completed. Correct: {total_correct}, Total: {total_tasks}")
+                logger.success(f"Accuracy: {total_correct / total_tasks if total_tasks > 0 else 0}")
+        else:
+            logger.success(f"Parallel processing completed. Correct: {total_correct}, Total: {total_tasks}")
+            logger.success(f"Accuracy: {total_correct / total_tasks if total_tasks > 0 else 0}")
         
     else:
         # 原始顺序处理模式
@@ -579,14 +731,25 @@ def evaluate_on_gaia():
 
         workforce = construct_workforce()
 
-        result = benchmark.run_workforce_with_retry(
-            workforce,
-            idx=test_idx,
-            save_result=SAVE_RESULT,
-            max_tries=MAX_TRIES,
-            max_replanning_tries=2,
-        )
-        
+        if TASK == "gaia":
+            result = benchmark.run_workforce_with_retry(
+                workforce,
+                on=on,
+                level=LEVEL,
+                idx=test_idx,
+                save_result=SAVE_RESULT,
+                max_tries=MAX_TRIES,
+                max_replanning_tries=2,
+            )
+        else:
+            result = benchmark.run_workforce_with_retry(
+                workforce,
+                idx=test_idx,
+                save_result=SAVE_RESULT,
+                max_tries=MAX_TRIES,
+                max_replanning_tries=2,
+            )
+            
         logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
         logger.success(f"Accuracy: {result['accuracy']}")
 

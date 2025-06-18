@@ -223,6 +223,7 @@ class OwlSingleAgentWorker(SingleAgentWorker):
         )
         try:
             response = await self.worker.astep(prompt, response_format=TaskResult)
+            # response = await self.worker.astep(prompt, response_format=None)  # NOTE: qwen
 
         except Exception as e:
             print(
@@ -580,7 +581,8 @@ Please output with the final answer according to the requirements without any ot
         resp = self.answerer_agent.step(prompt)
         self.answerer_agent_history.append(
             deepcopy(self.answerer_agent.chat_history))
-        return resp.msg.content
+        # return resp.msg.content
+        return resp.msg.content.split("</think>")[-1].strip()
 
 
     @check_if_running(False)

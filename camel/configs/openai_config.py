@@ -120,6 +120,7 @@ class ChatGPTConfig(BaseConfig):
     tool_choice: Optional[Union[Dict[str, str], str]] = None
     reasoning_effort: Optional[str] = None
     parallel_tool_calls: Optional[bool] = None
+    extra_body: Optional[dict] = None
 
 
 OPENAI_API_PARAMS = {param for param in ChatGPTConfig.model_fields.keys()}
