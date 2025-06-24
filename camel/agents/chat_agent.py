@@ -610,10 +610,11 @@ class ChatAgent(BaseAgent):
             response = self._get_model_response(
                 openai_messages,
                 num_tokens,
-                response_format,
+                # response_format,
+                None,
                 self._get_full_tool_schemas(),
             )
-
+            import pdb; pdb.set_trace()
             if tool_call_requests := response.tool_call_requests:
                 # Process all tool calls
                 for tool_call_request in tool_call_requests:
@@ -702,7 +703,8 @@ class ChatAgent(BaseAgent):
             response = await self._aget_model_response(
                 openai_messages,
                 num_tokens,
-                response_format,
+                # response_format,
+                None,
                 self._get_full_tool_schemas(),
             )
 

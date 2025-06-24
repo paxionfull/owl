@@ -304,12 +304,18 @@ class OfficeToolkit(BaseToolkit):
 
 
     def get_all_office_instances(self):
-        r"""检查用户正在使用的电脑上，有哪些office文档正在运行.
-        office文档类型包括：Word, Excel, PowerPoint.
+        r"""Check which office documents are currently running on the user's computer.
+        Office document types include: Word, Excel, PowerPoint.
 
         Returns:
-            str: 用户正在使用的office软件路径
+            str: Paths of office software currently being used by the user
         """
+        # r"""检查用户正在使用的电脑上，有哪些office文档正在运行.
+        # office文档类型包括：Word, Excel, PowerPoint.
+
+        # Returns:
+        #     str: 用户正在使用的office软件路径
+        # """
         word_paths = self.get_word_instances()
         ppt_paths = self.get_ppt_instances()
         excel_paths = self.get_excel_instances()
@@ -334,15 +340,24 @@ class OfficeToolkit(BaseToolkit):
         return files_info_str
     
     def get_all_office_instances_content(self, file_paths: list[str]):
-        r"""根据office文档路径，获取其内容.
-        office文档类型包括：Word, Excel, PowerPoint.
+        r"""Get content based on office document paths.
+        Office document types include: Word, Excel, PowerPoint.
 
         Args:
-            file_paths (list[str]): office文档路径列表，类型为list, 尽量包含所有正在运行的office文档
+            file_paths (list[str]): List of office document paths, type is list, try to include all currently running office documents
 
         Returns:
-            str: 文档的内容
+            str: Content of the documents
         """
+        # r"""根据office文档路径，获取其内容.
+        # office文档类型包括：Word, Excel, PowerPoint.
+
+        # Args:
+        #     file_paths (list[str]): office文档路径列表，类型为list, 尽量包含所有正在运行的office文档
+
+        # Returns:
+        #     str: 文档的内容
+        # """
         words_files = []
         ppts_files = []
         excels_files = []

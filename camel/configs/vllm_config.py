@@ -105,6 +105,7 @@ class VLLMConfig(BaseConfig):
     user: Optional[str] = None
     logprobs: Optional[bool] = None
     top_logprobs: Optional[int] = None
+    extra_body: Optional[dict] = None
 
 
 VLLM_API_PARAMS = {param for param in VLLMConfig.model_fields.keys()}

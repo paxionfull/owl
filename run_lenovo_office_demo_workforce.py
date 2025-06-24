@@ -51,29 +51,54 @@ from examples.overwrite_modules.email_toolkit import EmailToolkit
 from examples.overwrite_modules.office_toolkit import OfficeToolkit
 
 
-LLM_MODEL = "gpt-4o-2024-11-20"
-REASONING_MODEL = "gpt-4o-2024-11-20"
+WORKER_LLM_MODEL = "gpt-4o-2024-11-20"
+WORKER_REASONING_MODEL = "gpt-4o-2024-11-20"
+WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B"
+WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B"
+# WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-3B-Instruct"
+# WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-3B-Instruct"
+# WORKER_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_wikitablequestions_1_to_600_llava_cot_1_to_200_wthink_3e"
+# WORKER_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_wikitablequestions_1_to_600_llava_cot_1_to_200_wthink_3e"
+
+worker_model_platform = ModelPlatformType.VLLM
+# worker_model_config_dict = {"temperature": 0}
+worker_model_config_dict = {"temperature": 0, "extra_body": {"chat_template_kwargs": {"enable_thinking": True}}}
+# worker_url = "http://127.0.0.1:8001/v1"
+worker_url = "http://59.110.169.144:39929/v1"
+# worker_model_platform = ModelPlatformType.OPENAI
+# worker_model_config_dict = {"temperature": 0}
+# worker_url = None
+
+PIPELINE_LLM_MODEL = "gpt-4o-2024-11-20"
+PIPELINE_REASONING_MODEL = "gpt-4o-2024-11-20"
+pipeline_model_platform = ModelPlatformType.OPENAI
+pipeline_model_config_dict = {"temperature": 0}
+# pipeline_model_config_dict = {"temperature": 0, "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}
+# pipeline_url = "http://127.0.0.1:8001/v1"
+pipeline_url = None
 
 
-def construct_agent_list() -> List[Dict[str, Any]]:        
+def construct_agent_list() -> List[Dict[str, Any]]:       
     reasoning_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type=REASONING_MODEL,
-        model_config_dict={"temperature": 0},
+        model_platform=worker_model_platform,
+        model_type=WORKER_REASONING_MODEL,
+        model_config_dict=worker_model_config_dict,
+        url=worker_url
     )
-    
+
     email_agent_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type=LLM_MODEL,
-        model_config_dict={"temperature": 0},
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
+        model_config_dict=worker_model_config_dict,
+        url=worker_url
     )
 
     office_agent_model = ModelFactory.create(
-        model_platform=ModelPlatformType.OPENAI,
-        model_type=LLM_MODEL,
-        model_config_dict={"temperature": 0},
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
+        model_config_dict=worker_model_config_dict,
+        url=worker_url
     )
-    
 
     document_processing_toolkit = DocumentProcessingToolkit(cache_dir="tmp")
     code_runner_toolkit = CodeExecutionToolkit(sandbox="subprocess", verbose=True)
@@ -82,42 +107,53 @@ def construct_agent_list() -> List[Dict[str, Any]]:
 
     email_agent = OwlWorkforceChatAgent(
 """
-你是一个专门负责分析邮件和会议信息的助手。你可以通过访问outlook来获取邮件和会议信息。
+You are an assistant specialized in analyzing emails and meeting information. You can access Outlook to retrieve email and meeting information.
 
 tips:
-- 如果是获取会议日程，请使用get_meetings_on_specific_day工具
-- 如果用户没有明确表明获取多少时间范围内的邮件，请获取最近一个星期的邮件
-- 如果是获取会议日程，请在结果中返回会议日程的详细信息
-- 如果是分析处理邮件内容，请先在结果中返回各邮件的详细信息：标题，发件人，收件人，发送时间，邮件内容。最后返回分析结论。
+- If retrieving meeting schedules, please use the get_meetings_on_specific_day tool
+- If the user doesn't clearly specify the time range for emails, please retrieve emails from the last week
+- If retrieving meeting schedules, please return detailed meeting schedule information in the results
+- If analyzing and processing email content, please first return detailed information for each email: title, sender, recipient, sending time, email content. Finally return the analysis conclusion.
 """,
+        # """
+        # 你是一个专门负责分析邮件和会议信息的助手。你可以通过访问outlook来获取邮件和会议信息。
+
+        # tips:
+        # - 如果是获取会议日程，请使用get_meetings_on_specific_day工具
+        # - 如果用户没有明确表明获取多少时间范围内的邮件，请获取最近一个星期的邮件
+        # - 如果是获取会议日程，请在结果中返回会议日程的详细信息
+        # - 如果是分析处理邮件内容，请先在结果中返回各邮件的详细信息：标题，发件人，收件人，发送时间，邮件内容。最后返回分析结论。
+        # """,
         model=email_agent_model,
         tools=[
             *email_toolkit.get_tools(),
             FunctionTool(code_runner_toolkit.execute_code),
         ]
-    ) 
-
-# - 理解文档中体现的工作重点和优先级
-# - 识别文档中可能的截止时间、里程碑和依赖关系
-
-# 请确保：
-# - 首先获取所有正在运行的Office文档路径
-# - 详细解析每个文档的内容，理解工作上下文
-# - 识别文档中的任务列表、项目进度、待办事项
-# - 分析文档反映的当前工作重点和下一步计划
+    )
 
     office_agent = OwlWorkforceChatAgent(
 """
-你是一个专门负责分析Office文档内容的助手。你可以：
-- 检测当前打开的所有Office文档（Word、Excel、PowerPoint）
-- 提取和分析Office文档内容
+You are an assistant specialized in analyzing Office document content. You can:
+- Detect all currently open Office documents (Word, Excel, PowerPoint)
+- Extract and analyze Office document content
 
-注意：
-- 返回文档尽可能完整的内容，包含文件绝对路径，标题，文件内容摘要
-- 判断文档可能与哪个代办事项相关，在工作计划中与该代办事项相关联，查看文档还有多少工作量，并给出完成文档的详细计划；如果文档内容与任务不相关，无需纳入工作计划
-- 如果用户没有提供明确的工作计划，请跟根据文档内容和用户可能的工作性质，给出可能的工作计划
-- 工作计划不要具体到某个时间点，而是粗略到上午下午这种粒度
+Note:
+- Return as complete document content as possible, including absolute file path, title, and document content summary
+- Determine which documents may be related to which to-do items, associate them with the to-do items in the work plan, check how much work remains in the documents, and provide a detailed plan for completing the documents; if the document content is not related to the task, there's no need to include it in the work plan
+- If the user doesn't provide a clear work plan, please provide a possible work plan based on the document content and the user's likely work nature
+- Work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
 """,
+        # """
+        # 你是一个专门负责分析Office文档内容的助手。你可以：
+        # - 检测当前打开的所有Office文档（Word、Excel、PowerPoint）
+        # - 提取和分析Office文档内容
+
+        # 注意：
+        # - 返回文档尽可能完整的内容，包含文件绝对路径，标题，文件内容摘要
+        # - 判断文档可能与哪个代办事项相关，在工作计划中与该代办事项相关联，查看文档还有多少工作量，并给出完成文档的详细计划；如果文档内容与任务不相关，无需纳入工作计划
+        # - 如果用户没有提供明确的工作计划，请跟根据文档内容和用户可能的工作性质，给出可能的工作计划
+        # - 工作计划不要具体到某个时间点，而是粗略到上午下午这种粒度
+        # """,
         model=office_agent_model,
         tools=[
             *office_toolkit.get_tools(),
@@ -165,25 +201,28 @@ def construct_workforce() -> OwlGaiaWorkforce:
     
     coordinator_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.OPENAI,
-            model_type=REASONING_MODEL,
-            model_config_dict={"temperature": 0},
+            model_platform=pipeline_model_platform,
+            model_type=PIPELINE_REASONING_MODEL,
+            model_config_dict=pipeline_model_config_dict,
+            url=pipeline_url
         )
     }
     
     task_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.OPENAI,
-            model_type=LLM_MODEL,
-            model_config_dict={"temperature": 0},
+            model_platform=pipeline_model_platform,
+            model_type=PIPELINE_LLM_MODEL,
+            model_config_dict=pipeline_model_config_dict,
+            url=pipeline_url
         )
     }
     
     answerer_agent_kwargs = {
         "model": ModelFactory.create(
-            model_platform=ModelPlatformType.OPENAI,
-            model_type=LLM_MODEL,
-            model_config_dict={"temperature": 0},
+            model_platform=pipeline_model_platform,
+            model_type=PIPELINE_LLM_MODEL,
+            model_config_dict=pipeline_model_config_dict,
+            url=pipeline_url
         )
     }
     
@@ -335,26 +374,26 @@ def run_custom_prompt(prompt: str, file_paths: List[str] = None, with_guideline:
 {tips_prompt}
 </tips>
 
-请完成<task>中的任务，你需要：
-- 如果<guideline>有内容，按照<guideline>中的方式拆解<task>
-- 按照<task>和<tips>中提供的信息完成<task>
+Please complete the task in <task>, you need to:
+- If <guideline> has content, decompose <task> according to the instructions in <guideline>
+- Complete <task> based on the information provided in <task> and <tips>
 """
 
-    date_prompt = "今天是2025-06-08"
-    guideline_prompt = """- 查看我的邮件会议日程看看明天有什么会议
-- 查看我最近一个星期(截至今天)的邮件
-- 根据明天会议日程和邮件内容确定明天代办事项
-- 根据我电脑上已经打开的办公文档确定与明天代办相关的文档内容
-- 综合所有相关信息，给出明天的工作计划
+    date_prompt = "Today is 2025-06-08"
+    guideline_prompt = """- Check my meeting schedule for tomorrow
+- Check my emails from the last week (up to today)
+- Determine tomorrow's to-do items based on tomorrow's meeting schedule and email content
+- Determine the document content related to tomorrow's to-do items based on the Office documents already opened on my computer
+- Based on all relevant information, provide a possible work plan for tomorrow
 """ if with_guideline else ""
-    tips_prompt = """- 用尽可能少的步骤完成<task>
-- 制定工作计划时，要综合查看会议日程，邮件内容和电脑上打开的文档内容
-- 如果用户没有明确表明获取多少时间范围内的邮件，请获取最近一个星期的邮件
-- 制定工作计划时参考用户画像：用户喜欢上午准备开会相关的资料，下午学习新知识
-- 制定工作计划时，如果存在需要查看相关文档，请一定要给出相关文档的绝对路径，并说明为什么需要这些文档
-- 明天的会议日程信息必须包含在工作计划中（具体到时间点）；其余工作计划不要具体到某个时间点，而是粗略到上午下午这种粒度
-- 最终工作计划使用markdown格式输出
-- 回答使用中文
+    tips_prompt = """- Complete <task> with as few steps as possible
+- When creating a work plan, consider both meeting schedule, email content, and document content opened on my computer
+- If the user doesn't clearly specify the time range for emails, please retrieve emails from the last week
+- When creating a work plan, refer to user profile: users like to prepare materials for meetings in the morning and learn new knowledge in the afternoon
+- When creating a work plan, if there's a need to check related documents, please provide the absolute path of the related documents and explain why these documents are needed
+- Tomorrow's meeting schedule information must be included in the work plan (specific to time points); other work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
+- Final work plan should be output in markdown format
+- Answer in Chinese
 """
     prompt = prompt_template.format(
         date_prompt=date_prompt,
@@ -412,6 +451,7 @@ if __name__ == "__main__":
         # "今天是2025-06-08，查看我的邮件会议日程看看明天有什么会议， 同时查看我最近一个月(截至今天)的邮件，根据我电脑上已经打开的办公文档帮我确定明天的工作计划. 用尽可能少的步骤实现，用中文回答"
         # "今天是2025-06-08\n为我规划一下明日的工作计划\n用中文回答"
         "为我规划一下明日的工作计划",
+        # "planning tomorrow's work",
         with_guideline=False
         # with_guideline=True
     )

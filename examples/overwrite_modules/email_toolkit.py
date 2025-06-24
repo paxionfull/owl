@@ -40,15 +40,24 @@ class EmailToolkit(BaseToolkit):
         return outlook_instance
     
     def get_meetings_on_specific_day(self, start_date: str, end_date: str):
-        """获取指定时间范围内的会议
+        """Get meetings within a specified time range
 
         Args:
-            start_date (str): 开始日期, 格式为"YYYY-MM-DD"
-            end_date (str): 结束日期, 格式为"YYYY-MM-DD"
+            start_date (str): Start date in "YYYY-MM-DD" format
+            end_date (str): End date in "YYYY-MM-DD" format
 
         Returns:
-            str: 会议信息列表
+            str: List of meeting information
         """
+        # """获取指定时间范围内的会议
+
+        # Args:
+        #     start_date (str): 开始日期, 格式为"YYYY-MM-DD"
+        #     end_date (str): 结束日期, 格式为"YYYY-MM-DD"
+
+        # Returns:
+        #     str: 会议信息列表
+        # """
         outlook = self.get_outlook_instance()
         calendar = outlook.GetDefaultFolder(9)  # 9 表示日历文件夹
 
@@ -82,16 +91,26 @@ class EmailToolkit(BaseToolkit):
         return json.dumps(meetings_list, ensure_ascii=False)
 
     def get_emails_by_recipient_and_date(self, recipient_email: str,start_date: str,end_date: str):
-        """获取指定收件人，指定时间范围内的邮件内容
+        """Get emails for a specific recipient within a specified time range
 
         Args:
-            recipient_email (str): 收件人邮箱
-            start_date (str): 开始日期, 格式为"YYYY-MM-DD"
-            end_date (str): 结束日期, 格式为"YYYY-MM-DD"
+            recipient_email (str): Recipient email address
+            start_date (str): Start date in "YYYY-MM-DD" format
+            end_date (str): End date in "YYYY-MM-DD" format
 
         Returns:
-            str: 邮件信息列表
+            str: List of email information
         """
+        # """获取指定收件人，指定时间范围内的邮件内容
+
+        # Args:
+        #     recipient_email (str): 收件人邮箱
+        #     start_date (str): 开始日期, 格式为"YYYY-MM-DD"
+        #     end_date (str): 结束日期, 格式为"YYYY-MM-DD"
+
+        # Returns:
+        #     str: 邮件信息列表
+        # """
         outlook = self.get_outlook_instance()
         inbox = outlook.GetDefaultFolder(6)  # 收件箱
 
@@ -141,15 +160,24 @@ class EmailToolkit(BaseToolkit):
         return json.dumps(result_m, ensure_ascii=False)
 
     def get_emails_by_date(self, start_date: str, end_date: str):
-        """获取指定时间范围内的邮件内容
+        """Get emails within a specified time range
 
         Args:
-            start_date (str): 开始日期, 格式为"YYYY-MM-DD"
-            end_date (str): 结束日期, 格式为"YYYY-MM-DD"
+            start_date (str): Start date in "YYYY-MM-DD" format
+            end_date (str): End date in "YYYY-MM-DD" format
 
         Returns:
-            str: 邮件信息列表
+            str: List of email information
         """
+        # """获取指定时间范围内的邮件内容
+
+        # Args:
+        #     start_date (str): 开始日期, 格式为"YYYY-MM-DD"
+        #     end_date (str): 结束日期, 格式为"YYYY-MM-DD"
+
+        # Returns:
+        #     str: 邮件信息列表
+        # """
         outlook = self.get_outlook_instance()
         
         inbox = outlook.GetDefaultFolder(6)  # 收件箱
