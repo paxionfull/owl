@@ -246,6 +246,7 @@ class Task(BaseModel):
             role_name=role_name,
             content=self.content,
         )
+        # content += "/no_think"    # TODO
         msg = BaseMessage.make_user_message(
             role_name=role_name, content=content
         )

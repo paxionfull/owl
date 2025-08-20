@@ -529,6 +529,8 @@ class ChatAgent(BaseAgent):
                 continue
 
             prompt = SIMPLE_FORMAT_PROMPT.format(content=message.content)
+            # TODO
+            # prompt += "/no_think"
             openai_message: OpenAIMessage = {"role": "user", "content": prompt}
             # Explicitly set the tools to empty list to avoid calling tools
             response = self._get_model_response(
@@ -556,8 +558,8 @@ class ChatAgent(BaseAgent):
             self._try_format_message(message, response_format)
             if message.parsed:
                 continue
-
             prompt = SIMPLE_FORMAT_PROMPT.format(content=message.content)
+            prompt = prompt.replace("<think>\n\n</think>", "")  # TODO
             openai_message: OpenAIMessage = {"role": "user", "content": prompt}
             response = await self._aget_model_response(
                 [openai_message], 0, response_format, []

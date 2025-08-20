@@ -104,7 +104,52 @@ class MINTBenchmark(BaseBenchmark):
                 raw_data = [json.loads(line) for line in f.readlines()]
 
             self._data = raw_data
-            
+
+            prompt_template = """
+<task>
+{task_prompt}
+</task>
+<date>
+{date_prompt}
+</date>
+<guideline>
+{guideline_prompt}
+</guideline>
+<tips>
+{tips_prompt}
+</tips>
+
+Please complete the task in <task>, you need to:
+- If <guideline> has content, decompose <task> according to the instructions in <guideline>
+- Complete <task> based on the information provided in <task> and <tips>
+"""
+
+# - Determine tomorrow's to-do items based on tomorrow's meeting schedule and email content
+# - Determine the document content related to tomorrow's to-do items based on the Office documents already opened on my computer
+            date_prompt = "Today is 2025-06-08"
+            guideline_prompt = """- Check my meeting schedule for tomorrow by outlook calendar
+- Check my emails from the last week (up to today) by outlook email
+- Check the Office documents already opened on my computer
+- Based on all relevant information, provide a possible work plan for tomorrow
+"""
+            tips_prompt = """- Complete <task> with as few steps as possible
+- When creating a work plan, consider both meeting schedule, email content, and document content opened on my computer
+- If the user doesn't clearly specify the time range for emails, please retrieve emails from the last week
+- When creating a work plan, refer to user profile: users like to prepare materials for meetings in the morning and learn new knowledge in the afternoon
+- When creating a work plan, if there's a need to check related documents, please provide the absolute path of the related documents and explain why these documents are needed
+- Tomorrow's meeting schedule information must be included in the work plan (specific to time points); other work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
+- Final work plan should be output in markdown format
+- Do not write code to get meeting schedule or email content, you should use outlook calendar and outlook email to get the information
+- Answer in Chinese
+"""
+            for item in self._data:
+                item["prompt"] = prompt_template.format(
+                    date_prompt=date_prompt,
+                    task_prompt=item["prompt"],
+                    guideline_prompt=guideline_prompt,
+                    tips_prompt=tips_prompt
+                )
+                    
             
         except FileNotFoundError:
             logger.warning(f"Data file {data_file} not found. Creating empty dataset.")
@@ -185,11 +230,12 @@ Now, I have solved the question, the primary answer is as follows:
 </answer>
 
 Please extract and format the final answer from the primary answer. The final answer should be:
-- Concise and direct
-- In the format that best matches the question type
-- Without unnecessary explanations or context
-- If the answer has multiple items, please use "and" to connect them (e.g., "item1 and item2" for two items, "item1, item2 and item3" for three or more items)
-- Do not use commas alone to separate multiple items when there are only two items
+- When creating a work plan, consider both meeting schedule, email content, and document content opened on my computer
+- When creating a work plan, refer to user profile: users like to prepare materials for meetings in the morning and learn new knowledge in the afternoon
+- When creating a work plan, if there's a need to check related documents, please provide the absolute path of the related documents and explain why these documents are needed
+- Tomorrow's meeting schedule information must be included in the work plan (specific to time points); other work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
+- Final work plan should be output in html format
+- Answer in Chinese
 
 Please output only the final answer without any other text.
         """    
@@ -357,8 +403,8 @@ Please output only the final answer without any other text.
         tasks = self._load_tasks(randomize, subset, idx)
         self._results = []
         
-        if save_result:
-            self._results = self._load_results_from_file(self.save_to)
+        # if save_result:
+        #     self._results = self._load_results_from_file(self.save_to)
         
         for task in tqdm(tasks, desc=f"Running tasks"):
             if self._check_task_completed(task["id"]):
@@ -393,11 +439,12 @@ Now, I have solved the question by decomposing it into several subtasks, the sub
 </subtask_info>
 
 Please extract and format the final answer from the primary answer. The final answer should be:
-- Concise and direct
-- In the format that best matches the question type
-- Without unnecessary explanations or context
-- If the answer has multiple items, please use "and" to connect them (e.g., "item1 and item2" for two items, "item1, item2 and item3" for three or more items)
-- Do not use commas alone to separate multiple items when there are only two items
+- When creating a work plan, consider both meeting schedule, email content, and document content opened on my computer
+- When creating a work plan, refer to user profile: users like to prepare materials for meetings in the morning and learn new knowledge in the afternoon
+- When creating a work plan, if there's a need to check related documents, please provide the absolute path of the related documents and explain why these documents are needed
+- Tomorrow's meeting schedule information must be included in the work plan (specific to time points); other work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
+- Final work plan should be output in markdown format
+- Answer in Chinese
 
 Please output only the final answer without any other text.
 """    

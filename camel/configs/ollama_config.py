@@ -78,6 +78,8 @@ class OllamaConfig(BaseConfig):
     presence_penalty: Optional[float] = None
     response_format: Optional[Union[Type[BaseModel], dict]] = None
     frequency_penalty: Optional[float] = None
+    extra_body: Optional[dict] = None
+    think: Optional[bool] = None
 
 
 OLLAMA_API_PARAMS = {param for param in OllamaConfig.model_fields.keys()}

@@ -7,7 +7,7 @@ from camel.toolkits import (
     AudioAnalysisToolkit,
     AsyncBrowserToolkit,
     ExcelToolkit,
-    FunctionTool
+    FunctionTool,
 )
 from camel.models import ModelFactory
 from camel.types import(
@@ -16,6 +16,8 @@ from camel.types import(
 )
 from camel.tasks import Task
 from dotenv import load_dotenv
+from examples.overwrite_modules.email_toolkit import EmailToolkit
+from examples.overwrite_modules.office_toolkit import OfficeToolkit
 
 load_dotenv(override=True)
 
@@ -51,7 +53,6 @@ REASONING_MODEL = "gpt-4o-2024-11-20"
 # LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
 # REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
 
-
 WORKER_LLM_MODEL = "gpt-4o-2024-11-20"
 WORKER_REASONING_MODEL = "gpt-4o-2024-11-20"
 worker_model_platform = ModelPlatformType.OPENAI
@@ -62,17 +63,22 @@ worker_url = None
 # WORKER_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
 # WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
 # WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
-WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B"
-WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B"
+# WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
+# WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
+WORKER_LLM_MODEL = "Qwen3-4B-Q5_K_M"
+WORKER_REASONING_MODEL = "Qwen3-4B-Q5_K_M"
+# WORKER_LLM_MODEL = "qwen3-1.7b-gguf"
+# WORKER_REASONING_MODEL = "qwen3-1.7b-gguf"
 # WORKER_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
 # WORKER_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
 # WORKER_LLM_MODEL = "qwen3-32b"
 # WORKER_REASONING_MODEL = "qwen3-32b"
-worker_model_platform = ModelPlatformType.VLLM
-worker_url = "http://59.110.169.144:39929/v1"
+# worker_model_platform = ModelPlatformType.VLLM
+worker_model_platform = ModelPlatformType.OLLAMA
+worker_url = "http://127.0.0.1:11434/v1"
+# worker_url = "http://59.110.169.144:39929/v1"
 # worker_model_platform = ModelPlatformType.OPENAI
 # worker_url = None
-
 
 # PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct__21_300_train_jsonl__1-1200__question_v1_1000_decompose_train__8k"
 # PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/models/Qwen2.5-3B-Instruct__21_300_train_jsonl__1-1200__question_v1_1000_decompose_train__8k"
@@ -86,16 +92,42 @@ PIPELINE_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
 # PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
 # PIPELINE_LLM_MODEL = "qwen3-32b"
 # PIPELINE_REASONING_MODEL = "qwen3-32b"
+# PIPELINE_LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
+# PIPELINE_REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
+PIPELINE_LLM_MODEL = "Qwen3-4B-Q5_K_M"
+PIPELINE_REASONING_MODEL = "Qwen3-4B-Q5_K_M"
+# PIPELINE_LLM_MODEL = "qwen3-1.7b-gguf"
+# PIPELINE_REASONING_MODEL = "qwen3-1.7b-gguf"
+# pipeline_model_platform = ModelPlatformType.VLLM
+# pipeline_url = "http://59.110.169.14:39929/v1"
+pipeline_model_platform = ModelPlatformType.OLLAMA
+pipeline_url = "http://127.0.0.1:11434/v1"
+# pipeline_model_platform = ModelPlatformType.OPENAI
+# pipeline_url = None
+# PIPELINE_LLM_MODEL = "gpt-4o-2024-11-20"
+# PIPELINE_REASONING_MODEL = "gpt-4o-2024-11-20"
+# pipeline_model_platform = ModelPlatformType.OPENAI
+# pipeline_url = None
+
+
+WORKER_LLM_MODEL = "megrez-moe"
+WORKER_REASONING_MODEL = "megrez-moe"
+PIPELINE_LLM_MODEL = "megrez-moe"
+PIPELINE_REASONING_MODEL = "megrez-moe"
+# worker_model_platform = ModelPlatformType.OPENAI
+worker_model_platform = ModelPlatformType.VLLM
+# worker_url = "https://cloud.infini-ai.com/maas/v1"
+worker_url = "http://localhost:39929/v1"
+# pipeline_model_platform = ModelPlatformType.OPENAI
 pipeline_model_platform = ModelPlatformType.VLLM
-pipeline_url = "http://127.0.0.1:39929/v1"
-PIPELINE_LLM_MODEL = "gpt-4o-2024-11-20"
-PIPELINE_REASONING_MODEL = "gpt-4o-2024-11-20"
-pipeline_model_platform = ModelPlatformType.OPENAI
-pipeline_url = None
+# pipeline_url = "https://cloud.infini-ai.com/maas/v1"
+pipeline_url = "http://localhost:39929/v1"
 
 
-model_config_dict = {"temperature": 0}
-# model_config_dict = {"temperature": 0, "extra_body": {"chat_template_kwargs": {"enable_thinking": False}}}
+
+pipeline_model_config_dict = {"temperature": 0}
+# worker_model_config_dict = {"temperature": 0}
+worker_model_config_dict = {"temperature": 0}
 # model_platform = ModelPlatformType.OPENAI
 # model_platform = ModelPlatformType.VLLM
 # url = None
@@ -105,24 +137,38 @@ model_config_dict = {"temperature": 0}
 
 def construct_agent_list() -> List[Dict[str, Any]]:
 
+    email_agent_model = ModelFactory.create(
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
+        model_config_dict=worker_model_config_dict,
+        url=worker_url,
+    )
+
+    office_agent_model = ModelFactory.create(
+        model_platform=worker_model_platform,
+        model_type=WORKER_LLM_MODEL,
+        model_config_dict=worker_model_config_dict,
+        url=worker_url,
+    )
+
     web_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_LLM_MODEL,
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
     
     document_processing_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_LLM_MODEL,
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
     
     reasoning_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_REASONING_MODEL,
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
     
@@ -133,28 +179,28 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         # url=worker_url,
         model_platform=ModelPlatformType.OPENAI,
         model_type="gpt-4o-2024-11-20",
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=None,
     )
     
     audio_reasoning_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_REASONING_MODEL,
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
     
     web_agent_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_LLM_MODEL,
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
     
     planning_agent_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_REASONING_MODEL,
-        model_config_dict=model_config_dict,
+        model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
     
@@ -169,6 +215,67 @@ def construct_agent_list() -> List[Dict[str, Any]]:
     # browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
     excel_toolkit = ExcelToolkit()
     browser_user_toolkit = BrowserUseToolkit(headless=True)
+
+    email_toolkit = EmailToolkit()
+    office_toolkit = OfficeToolkit()
+
+    email_agent = OwlWorkforceChatAgent(
+# """
+# You are an assistant specialized in analyzing emails and meeting information. You can access Outlook to retrieve email and meeting information.
+
+# tips:
+# - If retrieving meeting schedules, please use the get_meetings_on_specific_day tool
+# - If the user doesn't clearly specify the time range for emails, please retrieve emails from the last week
+# - If retrieving meeting schedules, please return detailed meeting schedule information in the results
+# - If analyzing and processing email content, please first return detailed information for each email: title, sender, recipient, sending time, email content. Finally return the analysis conclusion.
+# """,
+        """
+        你是一个专门负责分析邮件和会议信息的助手。你可以通过访问outlook来获取邮件和会议信息。
+
+        tips:
+        - 不要重复使用某个工具
+        - 如果是获取会议日程，请使用get_meetings_on_specific_day工具
+        - 如果用户没有明确表明获取多少时间范围内的邮件，请获取最近一个星期的邮件
+        - 如果是获取会议日程，请在结果中返回会议日程的详细信息
+        - 如果是分析处理邮件内容，请先在结果中返回各邮件的详细信息：标题，发件人，收件人，发送时间，邮件内容。最后返回分析结论。
+        """,
+        model=email_agent_model,
+        tools=[
+            *email_toolkit.get_tools(),
+            FunctionTool(code_runner_toolkit.execute_code),
+        ]
+    )
+
+    office_agent = OwlWorkforceChatAgent(
+# """
+# You are an assistant specialized in analyzing Office document content. You can:
+# - Detect all currently open Office documents (Word, Excel, PowerPoint)
+# - Extract and analyze Office document content
+
+# Note:
+# - Return as complete document content as possible, including absolute file path, title, and document content summary
+# - Determine which documents may be related to which to-do items, associate them with the to-do items in the work plan, check how much work remains in the documents, and provide a detailed plan for completing the documents; if the document content is not related to the task, there's no need to include it in the work plan
+# - If the user doesn't provide a clear work plan, please provide a possible work plan based on the document content and the user's likely work nature
+# - Work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
+# """,
+        """
+        你是一个专门负责分析Office文档内容的助手。你可以：
+        - 检测当前打开的所有Office文档（Word、Excel、PowerPoint）
+        - 提取和分析Office文档内容
+
+        注意：
+        - 不要重复使用某个工具
+        - 返回文档尽可能完整的内容，包含文件绝对路径，标题，文件内容摘要
+        - 判断文档可能与哪个代办事项相关，在工作计划中与该代办事项相关联，查看文档还有多少工作量，并给出完成文档的详细计划；如果文档内容与任务不相关，无需纳入工作计划
+        - 如果用户没有提供明确的工作计划，请跟根据文档内容和用户可能的工作性质，给出可能的工作计划
+        - 工作计划不要具体到某个时间点，而是粗略到上午下午这种粒度
+        """,
+        model=office_agent_model,
+        tools=[
+            *office_toolkit.get_tools(),
+        ]
+    ) 
+
 
 
     web_agent = OwlWorkforceChatAgent(
@@ -232,6 +339,18 @@ Here are some tips that help you perform web search:
     )
 
     agent_list = []
+
+    email_agent_dict = {
+        "name": "Email Agent",
+        "description": "A helpful assistant that can analyze emails and meetings and extract task information",
+        "agent": email_agent
+    }
+    
+    office_agent_dict = {
+        "name": "Office Agent",
+        "description": "A helpful assistant that can analyze office documents and extract relevant information about the task",
+        "agent": office_agent
+    }
     
     web_agent_dict = {
         "name": "Web Agent",
@@ -251,9 +370,11 @@ Here are some tips that help you perform web search:
         "agent": reasoning_coding_agent
     }
 
-    agent_list.append(web_agent_dict)
-    agent_list.append(document_processing_agent_dict)
+    # agent_list.append(web_agent_dict)
+    # agent_list.append(document_processing_agent_dict)
     agent_list.append(reasoning_coding_agent_dict)
+    agent_list.append(email_agent_dict)
+    agent_list.append(office_agent_dict)
     return agent_list
 
 
@@ -263,7 +384,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
         "model": ModelFactory.create(
             model_platform=pipeline_model_platform,
             model_type=PIPELINE_REASONING_MODEL,
-            model_config_dict=model_config_dict,
+            model_config_dict=pipeline_model_config_dict,
             url=pipeline_url,
         )
     }
@@ -272,7 +393,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
         "model": ModelFactory.create(
             model_platform=pipeline_model_platform,
             model_type=PIPELINE_LLM_MODEL,
-            model_config_dict=model_config_dict,
+            model_config_dict=pipeline_model_config_dict,
             url=pipeline_url,
         )
     }
@@ -296,7 +417,7 @@ def construct_workforce() -> OwlGaiaWorkforce:
         "model": ModelFactory.create(
             model_platform=pipeline_model_platform,
             model_type=PIPELINE_LLM_MODEL,
-            model_config_dict=model_config_dict,
+            model_config_dict=pipeline_model_config_dict,
             url=pipeline_url,
         )
     }
@@ -560,14 +681,15 @@ def evaluate_on_gaia():
     # test_idx = list(range(53))  # gaia level1
     # test_idx = list(range(43))  # mint hotpotqa
 
-    TASK = "mint"
     TASK = "hotpotqa"
     TASK = "gaia"
+    TASK = "mint"
     if TASK == "gaia":
-        test_idx = [16]
         test_idx = list(range(53))
+        test_idx = [16]
     elif TASK == "mint":
-        test_idx = list(range(43))
+        # test_idx = list(range(43))
+        test_idx = [0]
     elif TASK == "hotpotqa":
         # test_idx = list(range(20))
         # test_idx = list(range(20, 300))
@@ -621,7 +743,8 @@ def evaluate_on_gaia():
                         save_result=SAVE_RESULT,
                         max_tries=MAX_TRIES,
                         max_replanning_tries=2,
-                        data_dir="data/xingyaoww-mint-bench/hotpotqa",
+                        # data_dir="data/xingyaoww-mint-bench/hotpotqa",
+                        data_dir="data/lenovo",
                         result_path=SAVE_RESULT_PATH.replace('.json', ''),
                         thread_id=task_idx  # 使用任务索引而不是线程序号
                     )
@@ -724,7 +847,8 @@ def evaluate_on_gaia():
             
         elif TASK == "mint":
             benchmark = MINTBenchmark(
-                data_dir="data/xingyaoww-mint-bench/hotpotqa",
+                # data_dir="data/xingyaoww-mint-bench/hotpotqa",
+                data_dir="data/lenovo",
                 save_to=SAVE_RESULT_PATH,
             )
         elif TASK == "hotpotqa":
@@ -753,7 +877,8 @@ def evaluate_on_gaia():
                 max_tries=MAX_TRIES,
                 max_replanning_tries=2,
             )
-            
+        with open(r'D:\workspace\projects\owl\result.md', 'w', encoding='utf-8') as f:
+            f.write(result["results"][0]["model_answer"].strip().replace("```markdown", "").replace("```", "").strip())
         logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
         logger.success(f"Accuracy: {result['accuracy']}")
 

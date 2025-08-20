@@ -475,6 +475,11 @@ Please try other ways to get the information.
                 return self._step_token_exceed(
                     e.args[1], tool_call_records, "max_tokens_exceeded"
                 )
+            # import pdb; pdb.set_trace()
+            # # NOTE
+            # for message in openai_messages:
+            #     if message["role"] == "user":
+            #         message["content"] += "/no_think"
 
             response = await self._aget_model_response(
                 openai_messages,

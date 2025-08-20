@@ -213,6 +213,12 @@ class ModelManager:
 
         # Pass all messages to the selected model and get the response
         try:
+            # TODO
+            # import pdb; pdb.set_trace()
+            for message in messages:
+                if message["role"] in ["user", "tool"]:
+                    message["content"] += "/no_think"
+
             response = self.current_model.run(messages, response_format, tools)
         except Exception as exc:
             logger.error(f"Error processing with model: {self.current_model}")
@@ -250,6 +256,10 @@ class ModelManager:
 
         # Pass all messages to the selected model and get the response
         try:
+            # TODO
+            for message in messages:
+                if message["role"] in ["user", "tool"]:
+                    message["content"] += "/no_think"
             response = await self.current_model.arun(
                 messages, response_format, tools
             )
