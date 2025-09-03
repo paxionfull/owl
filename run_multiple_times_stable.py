@@ -253,7 +253,7 @@ def run_multiple_times(num_runs=30):
 
 if __name__ == "__main__":
     # 可以通过命令行参数指定运行次数
-    num_runs = 30
+    num_runs = 10
     if len(sys.argv) > 1:
         try:
             num_runs = int(sys.argv[1])

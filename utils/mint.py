@@ -138,6 +138,7 @@ Please complete the task in <task>, you need to:
 - When creating a work plan, refer to user profile: users like to prepare materials for meetings in the morning and learn new knowledge in the afternoon
 - When creating a work plan, if there's a need to check related documents, please provide the absolute path of the related documents and explain why these documents are needed
 - Tomorrow's meeting schedule information must be included in the work plan (specific to time points); other work plans should not be specific to a certain time point, but rather rough to the level of morning/afternoon
+- Releted documents and their absolute path are needed in th final work plan, you must be sure their path are right (not create by yourself)
 - Final work plan should be output in markdown format
 - Do not write code to get meeting schedule or email content, you should use outlook calendar and outlook email to get the information
 - Answer in Chinese

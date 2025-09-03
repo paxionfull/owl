@@ -65,8 +65,12 @@ worker_url = None
 # WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
 # WORKER_LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
 # WORKER_REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
-WORKER_LLM_MODEL = "Qwen3-4B-Q5_K_M"
-WORKER_REASONING_MODEL = "Qwen3-4B-Q5_K_M"
+# WORKER_LLM_MODEL = "Qwen3-4B-Q5_K_M"
+# WORKER_REASONING_MODEL = "Qwen3-4B-Q5_K_M"
+# WORKER_LLM_MODEL = "megrez-moe"
+# WORKER_REASONING_MODEL = "megrez-moe"
+WORKER_LLM_MODEL = "iter_0000551_Q4_K_M_arc89"
+WORKER_REASONING_MODEL = "iter_0000551_Q4_K_M_arc89"
 # WORKER_LLM_MODEL = "qwen3-1.7b-gguf"
 # WORKER_REASONING_MODEL = "qwen3-1.7b-gguf"
 # WORKER_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
@@ -86,16 +90,20 @@ worker_url = "http://127.0.0.1:11434/v1"
 # PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen2.5-3b/full/sft/hotpotqa_1_to_1200_10e"
 # PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
 # PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_1200_5e"
-PIPELINE_LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
-PIPELINE_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
+# PIPELINE_LLM_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
+# PIPELINE_REASONING_MODEL = "/mnt/public/algm/models/Qwen2.5-32B-Instruct"
 # PIPELINE_LLM_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
 # PIPELINE_REASONING_MODEL = "/mnt/public/algm/yzy/train_repos/LLaMA-Factory/saves/qwen3-4b/full/sft/hotpotqa_1_to_3000_3e"
 # PIPELINE_LLM_MODEL = "qwen3-32b"
 # PIPELINE_REASONING_MODEL = "qwen3-32b"
 # PIPELINE_LLM_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
 # PIPELINE_REASONING_MODEL = "/mnt/public/algm/models/Qwen3-4B-GPTQ-Int4"
-PIPELINE_LLM_MODEL = "Qwen3-4B-Q5_K_M"
-PIPELINE_REASONING_MODEL = "Qwen3-4B-Q5_K_M"
+# PIPELINE_LLM_MODEL = "Qwen3-4B-Q5_K_M"
+# PIPELINE_REASONING_MODEL = "Qwen3-4B-Q5_K_M"
+# PIPELINE_LLM_MODEL = "megrez-moe"
+# PIPELINE_REASONING_MODEL = "megrez-moe"
+PIPELINE_LLM_MODEL = "iter_0000551_Q4_K_M_arc89"
+PIPELINE_REASONING_MODEL = "iter_0000551_Q4_K_M_arc89"
 # PIPELINE_LLM_MODEL = "qwen3-1.7b-gguf"
 # PIPELINE_REASONING_MODEL = "qwen3-1.7b-gguf"
 # pipeline_model_platform = ModelPlatformType.VLLM
@@ -110,19 +118,39 @@ pipeline_url = "http://127.0.0.1:11434/v1"
 # pipeline_url = None
 
 
+# WORKER_LLM_MODEL = "megrez-moe"
+# WORKER_REASONING_MODEL = "megrez-moe"
+# PIPELINE_LLM_MODEL = "megrez-moe"
+# PIPELINE_REASONING_MODEL = "megrez-moe"
+# # worker_model_platform = ModelPlatformType.OPENAI
+# worker_model_platform = ModelPlatformType.VLLM
+# # worker_url = "https://cloud.infini-ai.com/maas/v1"
+# worker_url = "http://localhost:39929/v1"
+# # pipeline_model_platform = ModelPlatformType.OPENAI
+# pipeline_model_platform = ModelPlatformType.VLLM
+# # pipeline_url = "https://cloud.infini-ai.com/maas/v1"
+# pipeline_url = "http://localhost:39929/v1"
+
+
+
 WORKER_LLM_MODEL = "megrez-moe"
 WORKER_REASONING_MODEL = "megrez-moe"
 PIPELINE_LLM_MODEL = "megrez-moe"
 PIPELINE_REASONING_MODEL = "megrez-moe"
-# worker_model_platform = ModelPlatformType.OPENAI
-worker_model_platform = ModelPlatformType.VLLM
-# worker_url = "https://cloud.infini-ai.com/maas/v1"
-worker_url = "http://localhost:39929/v1"
-# pipeline_model_platform = ModelPlatformType.OPENAI
-pipeline_model_platform = ModelPlatformType.VLLM
-# pipeline_url = "https://cloud.infini-ai.com/maas/v1"
-pipeline_url = "http://localhost:39929/v1"
+worker_model_platform = ModelPlatformType.OLLAMA
+worker_url = "http://127.0.0.1:8081/v1"
+pipeline_model_platform = ModelPlatformType.OLLAMA
+pipeline_url = "http://127.0.0.1:8081/v1"
 
+
+# WORKER_LLM_MODEL = "gpt-4o-2024-11-20"
+# WORKER_REASONING_MODEL = "gpt-4o-2024-11-20"
+# PIPELINE_LLM_MODEL = "gpt-4o-2024-11-20"
+# PIPELINE_REASONING_MODEL = "gpt-4o-2024-11-20"
+# worker_model_platform = ModelPlatformType.OPENAI
+# worker_url = "https://cloud.infini-ai.com/maas/v1"
+# pipeline_model_platform = ModelPlatformType.OPENAI
+# pipeline_url = "https://cloud.infini-ai.com/maas/v1"
 
 
 pipeline_model_config_dict = {"temperature": 0}
@@ -242,7 +270,7 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         model=email_agent_model,
         tools=[
             *email_toolkit.get_tools(),
-            FunctionTool(code_runner_toolkit.execute_code),
+            FunctionTool(code_runner_toolkit.execute_code),  # TODO
         ]
     )
 
@@ -878,7 +906,7 @@ def evaluate_on_gaia():
                 max_replanning_tries=2,
             )
         with open(r'D:\workspace\projects\owl\result.md', 'w', encoding='utf-8') as f:
-            f.write(result["results"][0]["model_answer"].strip().replace("```markdown", "").replace("```", "").strip())
+            f.write(result["results"][0]["model_answer"].strip().replace("```markdown", "").replace("```", "").replace("（2025年6月9日）", "").strip())
         logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
         logger.success(f"Accuracy: {result['accuracy']}")
 
