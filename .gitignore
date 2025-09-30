@@ -61,3 +61,5 @@ camel/utils/__pycache_/
 
 data/*
 
+*.zip
+*.7z
