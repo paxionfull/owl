@@ -140,3 +140,7 @@ types-tqdm
 types-colorama>=0.0.0
 types-requests>=2.0.0
 types-PyYAML>=6.0.0
+
+IPython
+retry
+loguru

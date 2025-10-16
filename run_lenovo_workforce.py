@@ -905,7 +905,6 @@ def evaluate_on_gaia():
                 max_tries=MAX_TRIES,
                 max_replanning_tries=2,
             )
-            from IPython import embed; embed()
         with open(r'.\result.md', 'w', encoding='utf-8') as f:
             f.write(result["results"][0]["model_answer"].strip().replace("```markdown", "").replace("```", "").replace("（2025年6月9日）", "").strip())
         logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
