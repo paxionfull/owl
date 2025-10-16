@@ -32,7 +32,7 @@ from utils.hotpotqa import HotpotQABenchmark
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
-from examples.overwrite_modules.browser_user_toolkit import BrowserUseToolkit
+# from examples.overwrite_modules.browser_user_toolkit import BrowserUseToolkit
 
 LLM_MODEL = "gpt-4o-2024-11-20"
 REASONING_MODEL = "gpt-4o-2024-11-20"
@@ -242,7 +242,7 @@ def construct_agent_list() -> List[Dict[str, Any]]:
     code_runner_toolkit = CodeExecutionToolkit(sandbox="subprocess", verbose=True)
     # browser_simulator_toolkit = AsyncBrowserToolkit(headless=True, cache_dir=f"tmp/browser", planning_agent_model=planning_agent_model, web_agent_model=web_agent_model)
     excel_toolkit = ExcelToolkit()
-    browser_user_toolkit = BrowserUseToolkit(headless=True)
+    # browser_user_toolkit = BrowserUseToolkit(headless=True)
 
     email_toolkit = EmailToolkit()
     office_toolkit = OfficeToolkit()
@@ -905,7 +905,8 @@ def evaluate_on_gaia():
                 max_tries=MAX_TRIES,
                 max_replanning_tries=2,
             )
-        with open(r'D:\workspace\projects\owl\result.md', 'w', encoding='utf-8') as f:
+            from IPython import embed; embed()
+        with open(r'.\result.md', 'w', encoding='utf-8') as f:
             f.write(result["results"][0]["model_answer"].strip().replace("```markdown", "").replace("```", "").replace("（2025年6月9日）", "").strip())
         logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
         logger.success(f"Accuracy: {result['accuracy']}")

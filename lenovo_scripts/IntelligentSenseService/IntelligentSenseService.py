@@ -400,8 +400,8 @@ def wnd_proc(hwnd, msg, wparam, lparam):
         if power_setting == guid_bytes(GUID_LIDSWITCH_STATE_CHANGE):
             state_text = "Opened" if lid_state else "Closed"
             logging.info(f"Lid state changed: {state_text} (lid_state={lid_state})")
-            result_file = r'D:\workspace\projects\owl\result.md'
-            default_file = r'D:\workspace\projects\owl\default.md'
+            result_file = r'C:\Users\yaozh\Desktop\lenovo_demo_workspace\projects\owl\result.md'
+            default_file = r'C:\Users\yaozh\Desktop\lenovo_demo_workspace\projects\owl\default.md'
             if lid_state:#open
                 if _first_lid_open:
                     logging.info("🔓 首次开盖，跳过开盖逻辑执行")
@@ -439,10 +439,10 @@ def wnd_proc(hwnd, msg, wparam, lparam):
                     logging.info("检测到合盖动作，开始执行Python脚本...")
                     # 为脚本指定日志文件，包含时间戳以便区分不同的执行
                     timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    log_file_path = rf"D:\workspace\projects\owl\logs\run_lenovo_workforce_{timestamp}.log"
+                    log_file_path = r"C:\Users\yaozh\Desktop\lenovo_demo_workspace\projects\owl\logs\run_lenovo_workforce_{timestamp}.log"
                     script_success = execute_python_script(
                         script_path="run_lenovo_workforce.py", 
-                        working_dir=r"D:\workspace\projects\owl",
+                        working_dir=r"C:\Users\yaozh\Desktop\lenovo_demo_workspace\projects\owl",
                         log_file=log_file_path
                     )
                     # script_success = True

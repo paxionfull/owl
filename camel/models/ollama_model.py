@@ -96,7 +96,8 @@ class OllamaModel(OpenAICompatibleModel):
         if not self._url:
             self._start_server()
 
-        tokenizer_path = "D:\workspace\projects\models\megrez2_lenovo"
+        # tokenizer_path = "D:\workspace\projects\models\megrez2_lenovo"
+        tokenizer_path = r"C:\Users\yaozh\Desktop\lenovo_demo_workspace\projects\models\megrez2-agentbasev4-minft"
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, trust_remote_code=True)
 
     def _start_server(self) -> None:
