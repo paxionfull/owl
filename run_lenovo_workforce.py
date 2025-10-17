@@ -29,6 +29,8 @@ from utils import OwlWorkforceChatAgent, OwlGaiaWorkforce
 from utils.gaia import GAIABenchmark
 from utils.mint import MINTBenchmark
 from utils.hotpotqa import HotpotQABenchmark
+from utils.token_tracker import global_token_tracker
+from utils.model_decorators import track_token_usage, track_async_token_usage
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
@@ -171,6 +173,12 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
+    
+    # 为email_agent_model添加token统计
+    if hasattr(email_agent_model, '_run'):
+        email_agent_model._run = track_token_usage(agent_name="Email Agent")(email_agent_model._run)
+    if hasattr(email_agent_model, '_arun'):
+        email_agent_model._arun = track_async_token_usage(agent_name="Email Agent")(email_agent_model._arun)
 
     office_agent_model = ModelFactory.create(
         model_platform=worker_model_platform,
@@ -178,6 +186,12 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
+    
+    # 为office_agent_model添加token统计
+    if hasattr(office_agent_model, '_run'):
+        office_agent_model._run = track_token_usage(agent_name="Office Agent")(office_agent_model._run)
+    if hasattr(office_agent_model, '_arun'):
+        office_agent_model._arun = track_async_token_usage(agent_name="Office Agent")(office_agent_model._arun)
 
     web_model = ModelFactory.create(
         model_platform=worker_model_platform,
@@ -186,6 +200,12 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         url=worker_url,
     )
     
+    # 为web_model添加token统计
+    if hasattr(web_model, '_run'):
+        web_model._run = track_token_usage(agent_name="Web Agent")(web_model._run)
+    if hasattr(web_model, '_arun'):
+        web_model._arun = track_async_token_usage(agent_name="Web Agent")(web_model._arun)
+    
     document_processing_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_LLM_MODEL,
@@ -193,12 +213,24 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         url=worker_url,
     )
     
+    # 为document_processing_model添加token统计
+    if hasattr(document_processing_model, '_run'):
+        document_processing_model._run = track_token_usage(agent_name="Document Processing Agent")(document_processing_model._run)
+    if hasattr(document_processing_model, '_arun'):
+        document_processing_model._arun = track_async_token_usage(agent_name="Document Processing Agent")(document_processing_model._arun)
+    
     reasoning_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_REASONING_MODEL,
         model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
+    
+    # 为reasoning_model添加token统计
+    if hasattr(reasoning_model, '_run'):
+        reasoning_model._run = track_token_usage(agent_name="Reasoning Coding Agent")(reasoning_model._run)
+    if hasattr(reasoning_model, '_arun'):
+        reasoning_model._arun = track_async_token_usage(agent_name="Reasoning Coding Agent")(reasoning_model._arun)
     
     image_analysis_model = ModelFactory.create( 
         # model_platform=worker_model_platform,
@@ -211,12 +243,24 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         url=None,
     )
     
+    # 为image_analysis_model添加token统计
+    if hasattr(image_analysis_model, '_run'):
+        image_analysis_model._run = track_token_usage(agent_name="Image Analysis Agent")(image_analysis_model._run)
+    if hasattr(image_analysis_model, '_arun'):
+        image_analysis_model._arun = track_async_token_usage(agent_name="Image Analysis Agent")(image_analysis_model._arun)
+    
     audio_reasoning_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_REASONING_MODEL,
         model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
+    
+    # 为audio_reasoning_model添加token统计
+    if hasattr(audio_reasoning_model, '_run'):
+        audio_reasoning_model._run = track_token_usage(agent_name="Audio Analysis Agent")(audio_reasoning_model._run)
+    if hasattr(audio_reasoning_model, '_arun'):
+        audio_reasoning_model._arun = track_async_token_usage(agent_name="Audio Analysis Agent")(audio_reasoning_model._arun)
     
     web_agent_model = ModelFactory.create(
         model_platform=worker_model_platform,
@@ -225,12 +269,24 @@ def construct_agent_list() -> List[Dict[str, Any]]:
         url=worker_url,
     )
     
+    # 为web_agent_model添加token统计
+    if hasattr(web_agent_model, '_run'):
+        web_agent_model._run = track_token_usage(agent_name="Web Agent")(web_agent_model._run)
+    if hasattr(web_agent_model, '_arun'):
+        web_agent_model._arun = track_async_token_usage(agent_name="Web Agent")(web_agent_model._arun)
+    
     planning_agent_model = ModelFactory.create(
         model_platform=worker_model_platform,
         model_type=WORKER_REASONING_MODEL,
         model_config_dict=worker_model_config_dict,
         url=worker_url,
     )
+    
+    # 为planning_agent_model添加token统计
+    if hasattr(planning_agent_model, '_run'):
+        planning_agent_model._run = track_token_usage(agent_name="Planning Agent")(planning_agent_model._run)
+    if hasattr(planning_agent_model, '_arun'):
+        planning_agent_model._arun = track_async_token_usage(agent_name="Planning Agent")(planning_agent_model._arun)
     
 
     search_toolkit = SearchToolkit()
@@ -408,22 +464,38 @@ Here are some tips that help you perform web search:
 
 def construct_workforce() -> OwlGaiaWorkforce:
     
+    coordinator_model = ModelFactory.create(
+        model_platform=pipeline_model_platform,
+        model_type=PIPELINE_REASONING_MODEL,
+        model_config_dict=pipeline_model_config_dict,
+        url=pipeline_url,
+    )
+    
+    # 为coordinator_model添加token统计
+    if hasattr(coordinator_model, '_run'):
+        coordinator_model._run = track_token_usage(agent_name="Coordinator Agent")(coordinator_model._run)
+    if hasattr(coordinator_model, '_arun'):
+        coordinator_model._arun = track_async_token_usage(agent_name="Coordinator Agent")(coordinator_model._arun)
+    
     coordinator_agent_kwargs = {
-        "model": ModelFactory.create(
-            model_platform=pipeline_model_platform,
-            model_type=PIPELINE_REASONING_MODEL,
-            model_config_dict=pipeline_model_config_dict,
-            url=pipeline_url,
-        )
+        "model": coordinator_model
     }
     
+    task_model = ModelFactory.create(
+        model_platform=pipeline_model_platform,
+        model_type=PIPELINE_LLM_MODEL,
+        model_config_dict=pipeline_model_config_dict,
+        url=pipeline_url,
+    )
+    
+    # 为task_model添加token统计
+    if hasattr(task_model, '_run'):
+        task_model._run = track_token_usage(agent_name="Task Agent")(task_model._run)
+    if hasattr(task_model, '_arun'):
+        task_model._arun = track_async_token_usage(agent_name="Task Agent")(task_model._arun)
+    
     task_agent_kwargs = {
-        "model": ModelFactory.create(
-            model_platform=pipeline_model_platform,
-            model_type=PIPELINE_LLM_MODEL,
-            model_config_dict=pipeline_model_config_dict,
-            url=pipeline_url,
-        )
+        "model": task_model
     }
     # task_agent_kwargs = {
     #     "model": ModelFactory.create(
@@ -441,13 +513,21 @@ def construct_workforce() -> OwlGaiaWorkforce:
     #         url="http://127.0.0.1:39929/v1",
     #     )
     # }
+    answerer_model = ModelFactory.create(
+        model_platform=pipeline_model_platform,
+        model_type=PIPELINE_LLM_MODEL,
+        model_config_dict=pipeline_model_config_dict,
+        url=pipeline_url,
+    )
+    
+    # 为answerer_model添加token统计
+    if hasattr(answerer_model, '_run'):
+        answerer_model._run = track_token_usage(agent_name="Answerer Agent")(answerer_model._run)
+    if hasattr(answerer_model, '_arun'):
+        answerer_model._arun = track_async_token_usage(agent_name="Answerer Agent")(answerer_model._arun)
+    
     answerer_agent_kwargs = {
-        "model": ModelFactory.create(
-            model_platform=pipeline_model_platform,
-            model_type=PIPELINE_LLM_MODEL,
-            model_config_dict=pipeline_model_config_dict,
-            url=pipeline_url,
-        )
+        "model": answerer_model
     }
     
     workforce = OwlGaiaWorkforce(
@@ -481,6 +561,10 @@ def process_single_task_index_gaia(
 ) -> Dict[str, Any]:
     """处理单个任务索引，用于并行执行"""
     
+    # 重置token统计器
+    global_token_tracker.reset()
+    global_token_tracker.start_task(f"gaia_task_{task_idx}")
+    
     # 为每个线程创建独立的workforce和benchmark
     workforce = construct_workforce()
     
@@ -501,20 +585,35 @@ def process_single_task_index_gaia(
             max_tries=max_tries,
             max_replanning_tries=max_replanning_tries,
         )
+        
+        # 结束任务统计
+        global_token_tracker.end_task(f"gaia_task_{task_idx}")
+        
+        # 打印token统计报告
+        logger.info(f"Thread {thread_id}: Task {task_idx} token统计:")
+        global_token_tracker.print_summary()
+        
+        # 保存详细日志
+        if save_result:
+            log_path = f"{result_path}_thread_{thread_id}_tokens.json"
+            global_token_tracker.save_detailed_log(log_path)
             
         return {
             'task_idx': task_idx,
             'thread_id': thread_id,
             'result': result,
+            'token_stats': global_token_tracker.get_summary(),
             'success': True
         }
         
     except Exception as e:
         logger.error(f"Thread {thread_id}: Error processing task {task_idx}: {e}")
+        global_token_tracker.end_task(f"gaia_task_{task_idx}")
         return {
             'task_idx': task_idx,
             'thread_id': thread_id,
             'error': str(e),
+            'token_stats': global_token_tracker.get_summary(),
             'success': False
         }
 
@@ -867,6 +966,10 @@ def evaluate_on_gaia():
         # 原始顺序处理模式
         logger.info("Using sequential processing")
         
+        # 重置token统计器
+        global_token_tracker.reset()
+        global_token_tracker.start_task(f"{TASK}_sequential")
+        
         if TASK == "gaia":
             benchmark = GAIABenchmark(
                 data_dir="data/gaia",
@@ -905,10 +1008,29 @@ def evaluate_on_gaia():
                 max_tries=MAX_TRIES,
                 max_replanning_tries=2,
             )
+        
+        # 结束任务统计
+        global_token_tracker.end_task(f"{TASK}_sequential")
+        
+        # 打印token统计报告
+        logger.info("Token使用统计:")
+        global_token_tracker.print_summary()
+        
+        # 保存详细日志
+        if SAVE_RESULT:
+            log_path = f"{SAVE_RESULT_PATH.replace('.json', '')}_tokens.json"
+            global_token_tracker.save_detailed_log(log_path)
+        
         with open(r'.\result.md', 'w', encoding='utf-8') as f:
             f.write(result["results"][0]["model_answer"].strip().replace("```markdown", "").replace("```", "").replace("（2025年6月9日）", "").strip())
         logger.success(f"Correct: {result['correct']}, Total: {result['total']}")
         logger.success(f"Accuracy: {result['accuracy']}")
+        
+        # 输出token统计到结果文件
+        result['token_stats'] = global_token_tracker.get_summary()
+        if SAVE_RESULT:
+            with open(SAVE_RESULT_PATH, 'w', encoding='utf-8') as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":
